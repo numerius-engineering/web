@@ -1,0 +1,20 @@
+# Jekyll Configuration
+
+title: My Site Title
+email: user@example.com
+github_username: yourusername
+
+# Jekyll settings
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "http://yourdomain.com" # the base hostname & protocol for your site
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - _drafts
+  - _pages
+  - _posts
+  - _plugins
+  - _site
+permalink: pretty
+markdown: kramdown
