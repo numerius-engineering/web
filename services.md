@@ -1,43 +1,38 @@
 ---
 title: Services
-description: Consulting, product development, rapid prototyping, 3D printing, and desktop or mobile application development.
+description: Consulting, product development, prototyping, fabrication, and application work.
 ---
 
 <section class="page-header">
   <p class="eyebrow">Services</p>
-  <h1>Technical consulting and product execution for electronics-driven work.</h1>
-  <p class="lead">Numerius Engineering focuses on practical delivery. The work spans strategic consulting, hands-on product development, prototype iteration, and software that supports real devices and real users.</p>
+  <h1>Consulting, product development, prototyping, fabrication, and application work.</h1>
+  <p class="lead">Numerius Engineering supports electronics-driven projects from early technical direction through hardware buildout and software delivery. The work is structured to move from hardware foundations to software creations with clear scope and practical execution.</p>
 </section>
 
 <section class="service-grid">
   <article class="content-block service-card">
     <p class="card-kicker">Consulting</p>
-    <h2>Technical direction with implementation depth.</h2>
-    <p>For clients who need an engineering partner to evaluate concepts, define system requirements, unblock development, and make buildable decisions early.</p>
+    <h2>Technical direction grounded in buildable decisions.</h2>
+    <p>For clients who need an engineering partner to evaluate concepts, define requirements, reduce risk early, and create a path from idea to implementation.</p>
   </article>
   <article class="content-block service-card">
-    <p class="card-kicker">Product Development</p>
+    <p class="card-kicker">Product development</p>
     <h2>From concept toward a working product.</h2>
-    <p>Hardware and software development aligned around a single product goal, with attention to iteration speed, manufacturability, and usable software interfaces.</p>
+    <p>Hardware and software development aligned around a single product goal, with attention to architecture, iteration speed, manufacturability, and usable interfaces.</p>
   </article>
   <article class="content-block service-card">
-    <p class="card-kicker">Rapid Prototyping</p>
-    <h2>Fast physical and software validation.</h2>
-    <p>Prototype-focused development to test assumptions quickly, reduce risk, and produce tangible results that can be reviewed, refined, and demonstrated.</p>
+    <p class="card-kicker">Prototyping</p>
+    <h2>Fast validation for hardware and system ideas.</h2>
+    <p>Electronic prototyping, PCB development, and early system integration work that turn assumptions into hardware you can test, review, and refine.</p>
   </article>
   <article class="content-block service-card">
-    <p class="card-kicker">3D Printing</p>
-    <h2>Functional parts for iterative development.</h2>
-    <p>Quick-turn printed parts and fixtures that support enclosure concepts, mechanical fit checks, and early-stage hardware integration work.</p>
+    <p class="card-kicker">Fabrication</p>
+    <h2>Physical iteration that keeps development moving.</h2>
+    <p>Computer aided drafting and 3D printing support enclosure concepts, fit checks, fixtures, and other functional parts needed to move prototypes forward.</p>
   </article>
   <article class="content-block service-card">
-    <p class="card-kicker">Desktop Applications</p>
-    <h2>Operator tools, configuration software, and internal utilities.</h2>
-    <p>Desktop software that supports testing, diagnostics, workflow automation, and product interaction for engineering teams and end users.</p>
-  </article>
-  <article class="content-block service-card">
-    <p class="card-kicker">Mobile Applications</p>
-    <h2>Companion software for connected products and workflows.</h2>
-    <p>Mobile applications that extend product functionality, surface useful data, and create cleaner user experiences around complex systems.</p>
+    <p class="card-kicker">Application work</p>
+    <h2>Embedded, mobile, and desktop software that supports real products.</h2>
+    <p>Software development that extends hardware into usable tools, connected workflows, and polished product experiences for operators, teams, and end users.</p>
   </article>
 </section>
