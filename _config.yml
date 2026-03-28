@@ -3,8 +3,8 @@ email: numerius.engineering@gmail.com
 description: >-
   Consulting-led electronics product development across hardware, software,
   rapid prototyping, and application development.
-baseurl: ""
-url: ""
+baseurl: "/web"
+url: "https://numerius-engineering.github.io"
 permalink: pretty
 markdown: kramdown
 
