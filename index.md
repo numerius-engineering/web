@@ -14,6 +14,9 @@ description: Consulting-led electronics design, product development, and softwar
     </div>
   </div>
   <div class="hero-panel">
+    <div class="hero-logo-frame">
+      <img class="hero-logo" src="{{ '/assets/NE.png' | relative_url }}" alt="Numerius Engineering logo">
+    </div>
     <p class="panel-label">Core Focus</p>
     <ul class="hero-list">
       <li>Consulting for electronics product strategy and execution</li>
