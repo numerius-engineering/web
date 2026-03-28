@@ -20,5 +20,42 @@
         </div>
       </footer>
     </div>
+    <div class="image-lightbox" id="image-lightbox" hidden>
+      <button class="image-lightbox-close" id="image-lightbox-close" aria-label="Close image preview">Close</button>
+      <img class="image-lightbox-image" id="image-lightbox-image" alt="">
+    </div>
+    <script>
+      (() => {
+        const lightbox = document.getElementById("image-lightbox");
+        const lightboxImage = document.getElementById("image-lightbox-image");
+        const closeButton = document.getElementById("image-lightbox-close");
+        if (!lightbox || !lightboxImage || !closeButton) return;
+
+        const closeLightbox = () => {
+          lightbox.hidden = true;
+          lightboxImage.removeAttribute("src");
+          lightboxImage.removeAttribute("alt");
+          document.body.classList.remove("lightbox-open");
+        };
+
+        document.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLImageElement)) return;
+          if (!target.classList.contains("gallery-image")) return;
+          lightboxImage.src = target.currentSrc || target.src;
+          lightboxImage.alt = target.alt || "";
+          lightbox.hidden = false;
+          document.body.classList.add("lightbox-open");
+        });
+
+        closeButton.addEventListener("click", closeLightbox);
+        lightbox.addEventListener("click", (event) => {
+          if (event.target === lightbox) closeLightbox();
+        });
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape" && !lightbox.hidden) closeLightbox();
+        });
+      })();
+    </script>
   </body>
 </html>
