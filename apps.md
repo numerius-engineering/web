@@ -1,15 +1,23 @@
 ---
 title: Apps
-description: Future gateway for API-backed applications and software tools.
+description: Gateway for browser-based applications and software tools developed by Numerius Engineering.
 ---
 
 <section class="page-header">
   <p class="eyebrow">Apps</p>
   <h1>Application gateway.</h1>
-  <p class="lead">This section is reserved for front ends to dynamically served applications and tools. It is intentionally minimal until public app endpoints are ready.</p>
+  <p class="lead">This section provides access to browser-based applications and software tools developed by Numerius Engineering. Apps hosted here are designed to launch directly from the site.</p>
 </section>
 
-<section class="empty-state">
-  <h2>No public apps are listed yet.</h2>
-  <p>When released, this page will act as the entry point for applications backed by external APIs and services.</p>
+<section class="gallery-grid">
+  <article class="gallery-item">
+    <div class="gallery-frame"></div>
+    <div class="gallery-meta">
+      <span class="tag">Mobile app</span>
+      <span class="tag">Calculator</span>
+      <span class="tag">Browser launch</span>
+    </div>
+    <h2><a href="{{ '/apps/post_fix_pro_v6_0_0.html' | relative_url }}">Post Fix Pro</a></h2>
+    <p>A polished calculator experience that can be launched directly in the browser from this app gateway.</p>
+  </article>
 </section>
