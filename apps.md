@@ -11,7 +11,7 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
-    <div class="gallery-frame"></div>
+    <img class="gallery-image" src="{{ '/assets/portfolio/post-fix-pro/cover-overview.png' | relative_url }}" alt="Post Fix Pro overview">
     <div class="gallery-meta">
       <span class="tag">Mobile app</span>
       <span class="tag">Calculator</span>
@@ -19,5 +19,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/post_fix_pro_v6_0_0.html' | relative_url }}">Post Fix Pro</a></h2>
     <p>A polished calculator experience that can be launched directly in the browser from this app gateway.</p>
+    <p><a href="{{ '/portfolio/post-fix-pro/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 </section>
