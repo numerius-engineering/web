@@ -11,6 +11,8 @@ description: Public legal documents, policies, and disclaimers for Numerius Engi
 
 <section class="legal-list">
   <h2>Document index</h2>
-  <p>No published policy documents are linked yet.</p>
-  <p>As documents are added, this page can link to items such as privacy policies, terms, disclaimers, and product-specific notices.</p>
+  <ul>
+    <li><a href="{{ '/legal/post-fix-pro-privacy-policy/' | relative_url }}">Post Fix Pro Privacy Policy</a> - Privacy policy for the Post Fix Pro application.</li>
+  </ul>
+  <p>Add new markdown files under the <code>legal/</code> directory and this page can be updated to link items such as privacy policies, terms, disclaimers, and product-specific notices.</p>
 </section>
