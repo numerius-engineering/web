@@ -1,50 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page.title }}</title>
-    <style>
-        body {
-            background-color: #1e1e1e;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-        }
-        .navbar {
-            background-color: #007bff;
-            padding: 10px;
-        }
-        .navbar a {
-            color: electricblue;
-            padding: 10px;
-            text-decoration: none;
-        }
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-        .container {
-            padding: 20px;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="navbar">
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-    </div>
-    <div class="container">
+    <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+    <meta name="description" content="{{ page.description | default: site.description }}">
+    <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  </head>
+  <body>
+    <div class="site-shell">
+      {% include navbar.html %}
+      <main class="page-content">
         {{ content }}
+      </main>
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <p>{{ site.title }}</p>
+          <a href="mailto:{{ site.email }}">{{ site.email }}</a>
+        </div>
+      </footer>
     </div>
-    <footer>
-        <form action="https://formspree.io/f/{yourFormId}" method="POST">
-            <label for="email">Email:</label>
-            <input type="email" name="email" required>
-            <button type="submit">Send</button>
-        </form>
-    </footer>
-</body>
-
+  </body>
 </html>

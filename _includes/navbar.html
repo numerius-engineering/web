@@ -1,93 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navigation Bar</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: #333;
-            padding: 1rem;
-        }
-        .navbar a {
-            color: white;
-            padding: 14px 20px;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 4px;
-        }
-        .navbar a:hover {
-            background-color: #575757;
-        }
-        .mobile-menu {
-            display: none;
-        }
-        @media (max-width: 768px) {
-            .navbar a {
-                display: none;
-            }
-            .mobile-menu {
-                display: block;
-                cursor: pointer;
-            }
-        }
-        .mobile-menu-content {
-            display: none;
-            flex-direction: column;
-            background-color: #333;
-            position: absolute;
-            width: 100%;
-            top: 60px;
-        }
-        .mobile-menu-content a {
-            display: block;
-            padding: 10px;
-        }
-        .mobile-menu-content.active {
-            display: flex;
-        }
-    </style>
-</head>
-<body>
-
-<div class="navbar">
-    <div class="mobile-menu" onclick="toggleMenu()">☰ Menu</div>
-    <div class="mobile-menu-content" id="mobileMenu">
-        <a href="/home">Home</a>
-        <a href="/portfolio">Portfolio</a>
-        <a href="/apps">Apps</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/legal-docs">Legal Docs</a>
-    </div>
-    <div class="desktop-menu">
-        <a href="/home">Home</a>
-        <a href="/portfolio">Portfolio</a>
-        <a href="/apps">Apps</a>
-        <a href="/about">About</a>
-        <a href="/contact">Contact</a>
-        <a href="/legal-docs">Legal Docs</a>
-    </div>
-</div>
-
-<script>
-    function toggleMenu() {
-        var menu = document.getElementById('mobileMenu');
-        if (menu.classList.contains('active')) {
-            menu.classList.remove('active');
-        } else {
-            menu.classList.add('active');
-        }
-    }
-</script>
-
-</body>
-</html>
+<header class="site-header">
+  <div class="nav-wrap">
+    <a class="brand" href="{{ '/' | relative_url }}">
+      <span class="brand-mark">NE</span>
+      <span class="brand-copy">
+        <strong>Numerius Engineering</strong>
+        <span>Solo expert electronics consultant</span>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="Primary">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <a href="{{ '/services/' | relative_url }}">Services</a>
+      <a href="{{ '/portfolio/' | relative_url }}">Portfolio</a>
+      <a href="{{ '/apps/' | relative_url }}">Apps</a>
+      <a href="{{ '/about/' | relative_url }}">About</a>
+      <a href="{{ '/contact/' | relative_url }}">Contact</a>
+      <a href="{{ '/legal/' | relative_url }}">Legal</a>
+    </nav>
+  </div>
+</header>
