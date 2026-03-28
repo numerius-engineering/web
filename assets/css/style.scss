@@ -1,0 +1,57 @@
+/*
+ * style.scss
+ * A SCSS file for dark theme styling with electric blue accents.
+ */
+
+body {
+    background-color: #1d1d1d; /* Dark background */
+    color: #ffffff; /* White text for contrast */
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Navigation styling */
+nav {
+    background-color: #232323; /* Dark navigation background */
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav a {
+    color: #00D4FF; /* Electric blue accents */
+    text-decoration: none;
+    margin: 0 15px;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive mobile design */
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    nav a {
+        margin: 10px 0;
+    }
+}
+
+/* Button styles */
+button {
+    background-color: #00D4FF; /* Electric blue button */
+    color: #ffffff; /* White text */
+    border: none;
+    border-radius: 5px;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
