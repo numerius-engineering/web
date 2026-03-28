@@ -40,6 +40,11 @@ description: Consulting-led electronics design, product development, and softwar
     <h2>Clear scope, rapid iteration, and buildable outcomes.</h2>
     <p>The goal is not to hand off vague ideas. The goal is to turn requirements into prototypes, products, and software that can be tested, refined, and delivered.</p>
   </article>
+  <article class="card">
+    <p class="card-kicker">Advanced platforms</p>
+    <h2>FPGAs, SoCs, and custom architectures when the problem demands it.</h2>
+    <p>Numerius Engineering also works with FPGA-based systems, SoCs, and other custom architectures where performance, integration, or specialized system behavior call for a more tailored technical approach.</p>
+  </article>
 </section>
 
 <section class="section-block">

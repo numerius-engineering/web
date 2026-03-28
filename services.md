@@ -35,4 +35,9 @@ description: Consulting, product development, prototyping, fabrication, and appl
     <h2>Embedded, mobile, and desktop software that supports real products.</h2>
     <p>Software development that extends hardware into usable tools, connected workflows, and polished product experiences for operators, teams, and end users.</p>
   </article>
+  <article class="content-block service-card">
+    <p class="card-kicker">Advanced platforms</p>
+    <h2>FPGAs, SoCs, and custom architectures for specialized systems.</h2>
+    <p>For projects that need more specialized compute or tightly integrated system behavior, Numerius Engineering works with FPGAs, SoCs, and other custom architectures as part of a broader product-development effort.</p>
+  </article>
 </section>
