@@ -12,8 +12,10 @@ exclude:
   - README.md
   - Gemfile
   - Gemfile.lock
+  - .bundle
   - _drafts
   - _site
+  - vendor
 
 defaults:
   -
