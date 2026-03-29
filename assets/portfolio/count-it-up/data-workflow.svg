@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Count It Up data workflow</title>
+  <desc id="desc">Illustration of Count It Up logging, storage, and CSV workflow.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a2030"/>
+      <stop offset="100%" stop-color="#0f1116"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1d2433"/>
+      <stop offset="100%" stop-color="#171a22"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect x="96" y="88" width="1008" height="544" rx="34" fill="url(#panel)" stroke="#2b3242" stroke-width="6"/>
+  <text x="144" y="158" font-size="50" font-family="Segoe UI, Arial, sans-serif" font-weight="700" fill="#e8edf6">Data workflow</text>
+  <text x="144" y="200" font-size="26" font-family="Segoe UI, Arial, sans-serif" fill="#9aa6bd">Commit counts, store locally, and move data through CSV when needed</text>
+
+  <rect x="144" y="276" width="232" height="152" rx="22" fill="#1f2430" stroke="#2b3242" stroke-width="4"/>
+  <text x="260" y="334" text-anchor="middle" font-size="32" font-family="Segoe UI, Arial, sans-serif" font-weight="700" fill="#67c1ff">Commit</text>
+  <text x="260" y="374" text-anchor="middle" font-size="22" font-family="Segoe UI, Arial, sans-serif" fill="#e8edf6">Timestamp + value</text>
+
+  <rect x="484" y="276" width="232" height="152" rx="22" fill="#1f2430" stroke="#2b3242" stroke-width="4"/>
+  <text x="600" y="334" text-anchor="middle" font-size="32" font-family="Segoe UI, Arial, sans-serif" font-weight="700" fill="#89ffb8">Persist</text>
+  <text x="600" y="374" text-anchor="middle" font-size="22" font-family="Segoe UI, Arial, sans-serif" fill="#e8edf6">IndexedDB / localStorage</text>
+
+  <rect x="824" y="276" width="232" height="152" rx="22" fill="#1f2430" stroke="#2b3242" stroke-width="4"/>
+  <text x="940" y="334" text-anchor="middle" font-size="32" font-family="Segoe UI, Arial, sans-serif" font-weight="700" fill="#67c1ff">CSV</text>
+  <text x="940" y="374" text-anchor="middle" font-size="22" font-family="Segoe UI, Arial, sans-serif" fill="#e8edf6">Import / export</text>
+
+  <g stroke="#67c1ff" stroke-width="8" fill="none" stroke-linecap="round">
+    <line x1="376" y1="352" x2="484" y2="352"/>
+    <line x1="716" y1="352" x2="824" y2="352"/>
+  </g>
+  <g fill="#67c1ff">
+    <polygon points="474,342 494,352 474,362"/>
+    <polygon points="814,342 834,352 814,362"/>
+  </g>
+
+  <rect x="208" y="492" width="784" height="74" rx="18" fill="#171a22" stroke="#2b3242" stroke-width="4"/>
+  <text x="600" y="540" text-anchor="middle" font-size="24" font-family="Segoe UI, Arial, sans-serif" fill="#9aa6bd">No user data is collected or sent to a server. Everything stays in the browser unless the user exports it.</text>
+</svg>

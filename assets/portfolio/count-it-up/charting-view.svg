@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Count It Up charting view</title>
+  <desc id="desc">Illustration of Count It Up charting and trend visualization.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#171c28"/>
+      <stop offset="100%" stop-color="#0f1116"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect x="96" y="88" width="1008" height="544" rx="34" fill="#171a22" stroke="#2b3242" stroke-width="6"/>
+  <text x="148" y="154" font-size="50" font-family="Segoe UI, Arial, sans-serif" font-weight="700" fill="#e8edf6">Trend visualization</text>
+  <text x="148" y="196" font-size="26" font-family="Segoe UI, Arial, sans-serif" fill="#9aa6bd">Logged values are plotted over time with an overlaid fitted curve.</text>
+
+  <rect x="152" y="234" width="892" height="314" rx="18" fill="#111520" stroke="#273047" stroke-width="4"/>
+  <g stroke="#2a3449" stroke-width="2">
+    <line x1="228" y1="274" x2="1010" y2="274"/>
+    <line x1="228" y1="346" x2="1010" y2="346"/>
+    <line x1="228" y1="418" x2="1010" y2="418"/>
+    <line x1="228" y1="490" x2="1010" y2="490"/>
+  </g>
+  <g stroke="#546380" stroke-width="3">
+    <line x1="228" y1="250" x2="228" y2="524"/>
+    <line x1="228" y1="524" x2="1010" y2="524"/>
+  </g>
+  <polyline points="270,472 404,430 540,388 678,348 812,304 950,280" fill="none" stroke="#67c1ff" stroke-width="5"/>
+  <polyline points="270,462 404,418 540,360 678,322 812,316 950,334" fill="none" stroke="#ffbd59" stroke-width="5" stroke-dasharray="14 10"/>
+  <g fill="#89ffb8">
+    <circle cx="270" cy="472" r="8"/><circle cx="404" cy="430" r="8"/><circle cx="540" cy="388" r="8"/>
+    <circle cx="678" cy="348" r="8"/><circle cx="812" cy="304" r="8"/><circle cx="950" cy="280" r="8"/>
+  </g>
+  <text x="154" y="588" font-size="24" font-family="Segoe UI, Arial, sans-serif" fill="#9aa6bd">Green points: logged values | Blue line: connected history | Orange dashed: cubic B-spline fit</text>
+</svg>

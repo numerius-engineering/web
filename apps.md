@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/count-it-up/count-it-up-screenshot.png' | relative_url }}" alt="Count It Up overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Productivity</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/count_it_up_single_file.html' | relative_url }}">Count It Up</a></h2>
+    <p>A browser-based event counter and timestamped logbook with charting, local persistence, CSV import/export, and a portable single-file HTML build.</p>
+    <p><a href="{{ '/portfolio/count-it-up/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/turbo-guacamole/turbo-guacamole-screenshot.png' | relative_url }}" alt="Turbo Guacamole overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
