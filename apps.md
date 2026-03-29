@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/wordle-wizard/wordle-wizard-screenshot.png' | relative_url }}" alt="Wordle Wizard overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Rust + WASM</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/wordle_wizard_v1.1.1_single_file.html' | relative_url }}">Wordle Wizard</a></h2>
+    <p>A browser-based Wordle advisor with a portable single-file build and a responsive solver workflow for live gameplay support.</p>
+    <p><a href="{{ '/portfolio/wordle-wizard/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/post-fix-pro/cover-overview.png' | relative_url }}" alt="Post Fix Pro overview">
     <div class="gallery-meta">
       <span class="tag">Mobile app</span>
