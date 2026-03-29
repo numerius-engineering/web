@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">RF Ranger reporting workflow</title>
+  <desc id="desc">Illustration of RF Ranger reporting, exports, and single-file portability.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#0b1220"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect x="96" y="88" width="1008" height="544" rx="34" fill="#172033" stroke="#2d3a53" stroke-width="6"/>
+  <text x="144" y="158" font-size="50" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-weight="700" fill="#f8fafc">Reporting workflow</text>
+  <text x="144" y="200" font-size="26" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" fill="#cbd5e1">Persist locally, export engineering artifacts, and distribute the app as a single file</text>
+
+  <rect x="150" y="266" width="240" height="138" rx="22" fill="#1e293b" stroke="#334155" stroke-width="4"/>
+  <text x="270" y="322" text-anchor="middle" font-size="30" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-weight="700" fill="#38bdf8">Workspace</text>
+  <text x="270" y="364" text-anchor="middle" font-size="22" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" fill="#e2e8f0">Local IndexedDB state</text>
+
+  <rect x="480" y="266" width="240" height="138" rx="22" fill="#1e293b" stroke="#334155" stroke-width="4"/>
+  <text x="600" y="322" text-anchor="middle" font-size="30" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-weight="700" fill="#38bdf8">Exports</text>
+  <text x="600" y="364" text-anchor="middle" font-size="22" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" fill="#e2e8f0">JSON, KML, CSV, PDF</text>
+
+  <rect x="810" y="266" width="240" height="138" rx="22" fill="#1e293b" stroke="#334155" stroke-width="4"/>
+  <text x="930" y="322" text-anchor="middle" font-size="30" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" font-weight="700" fill="#38bdf8">Release</text>
+  <text x="930" y="364" text-anchor="middle" font-size="22" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" fill="#e2e8f0">Standalone HTML artifact</text>
+
+  <g stroke="#38bdf8" stroke-width="8" fill="none" stroke-linecap="round">
+    <line x1="390" y1="335" x2="480" y2="335"/>
+    <line x1="720" y1="335" x2="810" y2="335"/>
+  </g>
+  <g fill="#38bdf8">
+    <polygon points="468,325 488,335 468,345"/>
+    <polygon points="798,325 818,335 798,345"/>
+  </g>
+
+  <rect x="154" y="484" width="892" height="90" rx="20" fill="#111827" stroke="#334155" stroke-width="4"/>
+  <text x="600" y="540" text-anchor="middle" font-size="24" font-family="Trebuchet MS, Segoe UI, Arial, sans-serif" fill="#cbd5e1">RF Ranger keeps user workspace data local in the browser while still supporting export and portable distribution.</text>
+</svg>

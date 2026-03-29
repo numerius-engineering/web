@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/rf-ranger/rf-ranger-screenshot.png' | relative_url }}" alt="RF Ranger overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">RF analysis</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/RF_Ranger_v0_66_0_single_file.html' | relative_url }}">RF Ranger</a></h2>
+    <p>A browser-based RF link analysis and reporting tool with map-driven workflows, persistent local workspaces, export features, and a portable single-file HTML build.</p>
+    <p><a href="{{ '/portfolio/rf-ranger/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/inspector-blanque/inspector-blanque-logo.png' | relative_url }}" alt="Inspector Blanque overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
