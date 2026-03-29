@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/inspector-blanque/inspector-blanque-logo.png' | relative_url }}" alt="Inspector Blanque overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Chess analysis</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/Inspector_Blanque_v3_3_0_single_file.html' | relative_url }}">Inspector Blanque</a></h2>
+    <p>A browser-based chess position evaluator with local Stockfish analysis, PGN/FEN support, move-quality review, and a portable single-file HTML release.</p>
+    <p><a href="{{ '/portfolio/inspector-blanque/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/count-it-up/count-it-up-screenshot.png' | relative_url }}" alt="Count It Up overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
