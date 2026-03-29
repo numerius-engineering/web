@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Turbo Guacamole control panel</title>
+  <desc id="desc">Illustration of Turbo Guacamole controls including rows, speed, pause, and reset.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#caf7ff"/>
+      <stop offset="100%" stop-color="#ffe0b2"/>
+    </linearGradient>
+    <linearGradient id="pill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff2c8"/>
+      <stop offset="100%" stop-color="#ffd166"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)"/>
+  <rect x="128" y="88" width="944" height="544" rx="40" fill="rgba(255,255,255,0.62)" stroke="rgba(0,119,182,0.24)" stroke-width="8"/>
+  <text x="160" y="158" font-size="50" font-family="Trebuchet MS, Arial, sans-serif" font-weight="700" fill="#013a63">Interactive controls</text>
+  <text x="160" y="202" font-size="26" font-family="Trebuchet MS, Arial, sans-serif" fill="#01577f">Adjust rows and speed live while the simulation runs</text>
+
+  <rect x="160" y="254" width="420" height="148" rx="26" fill="rgba(255,255,255,0.78)" stroke="rgba(0,119,182,0.2)" stroke-width="4"/>
+  <text x="196" y="306" font-size="30" font-family="Trebuchet MS, Arial, sans-serif" font-weight="700" fill="#013a63">Rows / Bins</text>
+  <line x1="204" y1="344" x2="532" y2="344" stroke="#0077b6" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="404" cy="344" r="18" fill="#ff7f6a" stroke="#013a63" stroke-width="4"/>
+  <text x="196" y="384" font-size="26" font-family="Trebuchet MS, Arial, sans-serif" fill="#013a63">10 rows • 11 bins</text>
+
+  <rect x="620" y="254" width="420" height="148" rx="26" fill="rgba(255,255,255,0.78)" stroke="rgba(0,119,182,0.2)" stroke-width="4"/>
+  <text x="656" y="306" font-size="30" font-family="Trebuchet MS, Arial, sans-serif" font-weight="700" fill="#013a63">Spin speed</text>
+  <line x1="664" y1="344" x2="992" y2="344" stroke="#0077b6" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="806" cy="344" r="18" fill="#48cae4" stroke="#013a63" stroke-width="4"/>
+  <text x="656" y="384" font-size="26" font-family="Trebuchet MS, Arial, sans-serif" fill="#013a63">1.0× speed</text>
+
+  <rect x="226" y="464" width="292" height="88" rx="36" fill="url(#pill)" stroke="rgba(1,58,99,0.18)" stroke-width="4"/>
+  <text x="372" y="520" text-anchor="middle" font-size="34" font-family="Trebuchet MS, Arial, sans-serif" font-weight="700" fill="#013a63">Pause</text>
+  <rect x="678" y="464" width="292" height="88" rx="36" fill="url(#pill)" stroke="rgba(1,58,99,0.18)" stroke-width="4"/>
+  <text x="824" y="520" text-anchor="middle" font-size="34" font-family="Trebuchet MS, Arial, sans-serif" font-weight="700" fill="#013a63">Reset</text>
+</svg>
