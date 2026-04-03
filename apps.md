@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/py-whole/py-whole-logo.png' | relative_url }}" alt="Py-Whole overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Python notebooks</span>
+      <span class="tag">Static web package</span>
+    </div>
+    <h2><a href="{{ '/apps/py_whole/' | relative_url }}">Py-Whole</a></h2>
+    <p>An offline browser notebook workbench with Pyodide-backed Python execution, project files, package loading, and a static web deployment package split across normal served files.</p>
+    <p><a href="{{ '/portfolio/py-whole/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/rf-ranger/rf-ranger-screenshot.png' | relative_url }}" alt="RF Ranger overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>

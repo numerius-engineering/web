@@ -22,11 +22,12 @@ featured: true
     <h2>Project focus</h2>
     <p>This project centered on building a notebook-style Python environment that remains usable without a server: notebook cells, markdown, project files, bundled scientific packages, and browser persistence all ship together in one portable artifact.</p>
     <p>The result is a browser-first engineering workspace that can be hosted, shared, or reopened later without depending on a traditional backend notebook service.</p>
+    <p><a href="{{ '/apps/py_whole/' | relative_url }}">Launch the live browser app</a></p>
   </article>
   <article class="content-block">
     <h2>What it demonstrates</h2>
     <p>Py-Whole demonstrates Numerius Engineering's ability to package a technically heavier browser application, embed an offline Python runtime, manage single-file release constraints, and still preserve a practical engineering workspace for real notebook use.</p>
-    <p><a href="{{ '/portfolio/' | relative_url }}">Browse the rest of the portfolio</a></p>
+    <p><a href="{{ '/apps/' | relative_url }}">Browse the Apps gateway</a></p>
   </article>
 </section>
 
@@ -48,8 +49,8 @@ featured: true
     </article>
     <article class="gallery-item">
       <img class="gallery-image" src="{{ '/assets/portfolio/py-whole/py-whole-logo.png' | relative_url }}" alt="Py-Whole portable single-file distribution">
-      <h2>Portable distribution</h2>
-      <p>The application is built around a standalone single-file HTML release, making it practical to archive, move between systems, and reopen without a conventional install flow.</p>
+      <h2>Web-hostable distribution</h2>
+      <p>The application can also be packaged as a static web-served folder, keeping individual files small enough for conventional site hosting while preserving the same notebook workspace behavior.</p>
     </article>
   </div>
 </section>

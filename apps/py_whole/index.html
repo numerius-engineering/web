@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Py-Whole</title>
+    <link rel="icon" type="image/png" href="./py_whole_favicon.png" />
+    <link rel="shortcut icon" type="image/x-icon" href="./py_whole_favicon.ico" />
+
+    <link rel="apple-touch-icon" href="./py_whole_favicon.png" />
+    <link rel="stylesheet" href="./vendor/codemirror/lib/codemirror.min.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="app-splash" class="app-splash" role="status" aria-live="polite">
+      <div class="app-splash-card">
+        <img class="app-logo app-logo-splash" src="./py_whole_logo.png" alt="Py-Whole logo" />
+        <p class="app-splash-eyebrow">Offline Notebook Runtime</p>
+        <h1>Py-Whole</h1>
+        <p id="app-splash-status" class="app-splash-status">Loading application shell...</p>
+      </div>
+    </div>
+    <div id="app-error-banner" class="app-error-banner is-hidden" role="alert"></div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block brand-block-sidebar">
+          <img class="app-logo app-logo-sidebar" src="./py_whole_logo.png" alt="Py-Whole logo" />
+          <p class="eyebrow">Project Files</p>
+          <h1>Py-Whole</h1>
+          <p class="brand-copy">
+            Files and notebooks for the current local workspace.
+          </p>
+        </div>
+
+        <section class="panel">
+          <h2>Project Files</h2>
+          <p class="panel-copy workspace-root-label">Root: <code>/workspace</code></p>
+          <input
+            id="workspace-file-filter-input"
+            class="panel-filter"
+            type="text"
+            placeholder="Filter files and notebooks"
+            aria-label="Filter files and notebooks"
+          />
+          <div id="workspace-files" class="workspace-tree"></div>
+        </section>
+
+        <details class="panel panel-collapsible">
+          <summary class="panel-summary">Selected File</summary>
+          <div id="workspace-file-editor-meta" class="panel-copy">
+            Select a file to preview it.
+          </div>
+          <div id="workspace-file-preview" class="workspace-file-preview"></div>
+        </details>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Packages</h2>
+            <button
+              class="panel-toggle secondary"
+              data-panel-target="package-panel"
+              data-show-label="Show"
+              data-hide-label="Hide"
+              type="button"
+            >Hide</button>
+          </div>
+          <div id="package-panel">
+            <p class="panel-copy">
+              Target scientific stack for the embedded runtime:
+            </p>
+            <ul class="tag-list" id="package-list"></ul>
+            <div id="package-detail" class="package-detail"></div>
+            <div class="button-row">
+              <button id="load-package" class="secondary">Load Package</button>
+              <button id="copy-package-import" class="secondary">Copy Import Snippet</button>
+              <button id="insert-package-demo" class="secondary">Insert Demo</button>
+              <button id="run-package-demo" class="secondary">Run Demo</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Runtime</h2>
+            <button
+              class="panel-toggle secondary"
+              data-panel-target="runtime-support-panel"
+              data-show-label="Show"
+              data-hide-label="Hide"
+              type="button"
+            >Hide</button>
+          </div>
+          <div id="runtime-support-panel">
+            <p class="panel-copy">
+              Verify the embedded scientific stack and matplotlib backend on this device.
+            </p>
+            <div class="button-row">
+              <button id="run-runtime-diagnostics" class="secondary">Run Runtime Check</button>
+              <button id="copy-runtime-diagnostics" class="secondary">Copy Report</button>
+              <button id="insert-runtime-report" class="secondary">Insert Report</button>
+            </div>
+            <div id="runtime-diagnostics" class="runtime-diagnostics"></div>
+          </div>
+        </section>
+
+      </aside>
+
+      <div
+        id="left-column-resizer"
+        class="layout-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize project files column"
+      ></div>
+
+      <main class="workspace-shell">
+        <section class="workspace">
+          <div class="workspace-main-column">
+            <section id="document-tabs" class="document-tabs"></section>
+
+            <header class="workspace-header">
+              <nav class="notebook-menubar" aria-label="Notebook menubar">
+                <details class="menu-group">
+                  <summary>File</summary>
+                  <div class="menu-panel">
+                    <button id="menu-new-notebook" class="menu-action secondary" type="button">New Notebook</button>
+                    <button id="menu-import-notebook" class="menu-action secondary" type="button">Import Notebook</button>
+                    <button id="menu-export-notebook" class="menu-action secondary" type="button">Export Notebook</button>
+                    <button id="menu-import-file" class="menu-action secondary" type="button">Import Files</button>
+                    <button id="menu-new-file" class="menu-action secondary" type="button">New File</button>
+                    <button id="menu-new-folder" class="menu-action secondary" type="button">New Folder</button>
+                    <button id="menu-rename-workspace-file" class="menu-action secondary" type="button">Rename Workspace File</button>
+                    <button id="menu-save-workspace-file" class="menu-action secondary" type="button">Save Workspace File</button>
+                    <button id="menu-save-workspace-file-as" class="menu-action secondary" type="button">Save Workspace File As</button>
+                    <button id="menu-revert-workspace-file" class="menu-action secondary" type="button">Revert Workspace File</button>
+                    <button id="menu-export-workspace-file" class="menu-action secondary" type="button">Export Workspace File</button>
+                  </div>
+                </details>
+                <details class="menu-group">
+                  <summary>Cell</summary>
+                  <div class="menu-panel">
+                    <button id="toolbar-add-code-cell" class="menu-action secondary" type="button">Add Code Cell</button>
+                    <button id="toolbar-add-markdown-cell" class="menu-action secondary" type="button">Add Markdown Cell</button>
+                    <button id="toolbar-clear-outputs" class="menu-action secondary" type="button">Clear Outputs</button>
+                    <button id="menu-clear-recovery" class="menu-action secondary" type="button">Clear Recovery</button>
+                  </div>
+                </details>
+                <details class="menu-group">
+                  <summary>Run</summary>
+                  <div class="menu-panel">
+                    <button id="menu-debug-cell" class="menu-action secondary" type="button">Experimental Debug Cell</button>
+                    <button id="toolbar-run-active-cell" class="menu-action secondary" type="button">Run Cell</button>
+                    <button id="toolbar-run-above-cell" class="menu-action secondary" type="button">Run Above</button>
+                    <button id="toolbar-run-below-cell" class="menu-action secondary" type="button">Run Below</button>
+                    <button id="toolbar-run-all" class="menu-action secondary" type="button">Run All Cells</button>
+                    <button id="menu-clear-outputs-cell" class="menu-action secondary" type="button">Clear Outputs</button>
+                  </div>
+                </details>
+                <details class="menu-group">
+                  <summary>Kernel</summary>
+                  <div class="menu-panel">
+                    <button id="toolbar-initialize-runtime" class="menu-action secondary" type="button">Initialize Runtime</button>
+                    <button id="menu-restart-runtime" class="menu-action secondary" type="button">Restart Runtime</button>
+                    <button id="menu-interrupt-runtime" class="menu-action secondary" type="button">Interrupt Runtime</button>
+                    <button id="toolbar-interrupt-run" class="menu-action secondary" type="button">Interrupt Run</button>
+                  </div>
+                </details>
+                <details class="menu-group">
+                  <summary>View</summary>
+                  <div class="menu-panel">
+                    <button
+                      class="menu-action secondary panel-toggle"
+                      data-panel-target="variable-viewer"
+                      data-show-label="Show Variables"
+                      data-hide-label="Hide Variables"
+                      type="button"
+                    >Hide Variables</button>
+                    <button
+                      class="menu-action secondary panel-toggle"
+                      data-panel-target="variable-detail-viewer"
+                      data-show-label="Show Inspector"
+                      data-hide-label="Hide Inspector"
+                      type="button"
+                    >Hide Inspector</button>
+                    <button
+                      class="menu-action secondary panel-toggle"
+                      data-panel-target="debug-viewer"
+                      data-show-label="Show Experimental Debug"
+                      data-hide-label="Hide Experimental Debug"
+                      type="button"
+                    >Hide Experimental Debug</button>
+                    <button
+                      class="menu-action secondary panel-toggle"
+                      data-panel-target="terminal-output"
+                      data-show-label="Show Terminal"
+                      data-hide-label="Hide Terminal"
+                      type="button"
+                    >Hide Terminal</button>
+                  </div>
+                </details>
+                <details class="menu-group">
+                  <summary>Help</summary>
+                  <div class="menu-panel">
+                    <button id="menu-open-help" class="menu-action secondary" type="button">Help</button>
+                    <button id="menu-open-legal" class="menu-action secondary" type="button">Legal</button>
+                    <button id="menu-run-runtime-diagnostics" class="menu-action secondary" type="button">Run Runtime Check</button>
+                    <button id="menu-copy-runtime-diagnostics" class="menu-action secondary" type="button">Copy Runtime Report</button>
+                    <button id="menu-insert-runtime-report" class="menu-action secondary" type="button">Insert Runtime Report</button>
+                  </div>
+                </details>
+              </nav>
+              <div class="workspace-header-copy">
+                <p class="eyebrow" id="workspace-eyebrow">Notebook</p>
+                <label class="title-label">
+                  <span class="visually-hidden">Notebook title</span>
+                  <input
+                    id="notebook-title-input"
+                    class="title-input"
+                    type="text"
+                    value="Untitled"
+                    aria-label="Notebook title"
+                  />
+                </label>
+                <p class="workspace-subtitle">
+                  Use `Shift+Enter` to run the active cell. The first run initializes Python automatically if needed.
+                </p>
+                <div class="workspace-status-strip" aria-label="Notebook status">
+                  <span>Kernel: <strong id="kernel-state">Uninitialized</strong></span>
+                  <span>Execution: <strong id="execution-state">Idle</strong></span>
+                  <span>Interrupt: <strong id="interrupt-state">Not requested</strong></span>
+                  <span>Save: <strong id="save-state">Unsaved</strong></span>
+                </div>
+              </div>
+            </header>
+
+            <section id="notebook-surface" class="notebook-surface">
+              <section id="notebook-cells" class="cells"></section>
+            </section>
+
+            <section id="file-surface" class="file-surface is-hidden">
+              <div class="file-surface-card">
+                <div id="file-surface-meta" class="panel-copy">Select a file from the workspace.</div>
+                <div id="file-surface-preview" class="workspace-file-preview"></div>
+                <label class="editor-label">
+                  <span>Workspace File</span>
+                  <textarea
+                    id="file-surface-editor"
+                    class="cell-editor workspace-file-editor"
+                    spellcheck="false"
+                    aria-label="Workspace file editor main surface"
+                  ></textarea>
+                </label>
+                <div class="button-row">
+                  <button id="file-surface-save" class="secondary">Save File</button>
+                  <button id="file-surface-revert" class="secondary">Revert</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="workspace-utility-panels">
+              <section class="panel workspace-utility-panel">
+                <div class="panel-header">
+                  <h2>Terminal</h2>
+                  <button
+                    class="panel-toggle secondary"
+                    data-panel-target="terminal-output"
+                    data-show-label="Show"
+                    data-hide-label="Hide"
+                    type="button"
+                  >Hide</button>
+                </div>
+                <div id="terminal-output" class="terminal-output"></div>
+                <label class="editor-label">
+                  <span>Python Console</span>
+                  <textarea
+                    id="terminal-input"
+                    class="cell-editor terminal-input"
+                    spellcheck="false"
+                    aria-label="Terminal input"
+                  ></textarea>
+                </label>
+                <div class="button-row">
+                  <button id="run-terminal-command">Run Command</button>
+                  <button id="clear-terminal-output" class="secondary">Clear</button>
+                </div>
+              </section>
+            </section>
+          </div>
+        </section>
+
+        <div
+          id="right-column-resizer"
+          class="layout-resizer"
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize inspector column"
+        ></div>
+
+        <aside class="inspector-rail">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Session</h2>
+              <button
+                class="panel-toggle secondary"
+                data-panel-target="notebook-status-panel"
+                data-show-label="Show"
+                data-hide-label="Hide"
+                type="button"
+              >Hide</button>
+            </div>
+            <div id="notebook-status-panel" class="notebook-status-panel">
+              <div class="meta-card">
+                <span class="meta-label">Goal</span>
+                <span class="meta-value">Notebook editing first</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Execution</span>
+                <span class="meta-value">Browser-only adapter</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Output</span>
+                <span class="meta-value">Text-ready cell output area</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Run State</span>
+                <span class="meta-value" id="run-state">Idle</span>
+              </div>
+              <div class="meta-card">
+                <span class="meta-label">Persistence</span>
+                <span class="meta-value" id="session-save-state">Unsaved</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Variables</h2>
+              <button
+                class="panel-toggle secondary"
+                data-panel-target="variable-viewer"
+                data-show-label="Show"
+                data-hide-label="Hide"
+                type="button"
+              >Hide</button>
+            </div>
+            <div id="variable-viewer" class="variable-list"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Properties</h2>
+              <button
+                class="panel-toggle secondary"
+                data-panel-target="variable-detail-viewer"
+                data-show-label="Show"
+                data-hide-label="Hide"
+                type="button"
+              >Hide</button>
+            </div>
+            <div id="variable-detail-viewer" class="variable-detail-viewer"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Experimental Debug</h2>
+              <button
+                class="panel-toggle secondary"
+                data-panel-target="debug-viewer"
+                data-show-label="Show"
+                data-hide-label="Hide"
+                type="button"
+              >Hide</button>
+            </div>
+            <div id="debug-viewer" class="debug-viewer"></div>
+          </section>
+
+        </aside>
+      </main>
+      <footer class="app-footer">
+        Version 1.0.0 | Copyright 2026 Numerius Engineering LLC | For support contact numerius.engineering@gmail.com
+      </footer>
+    </div>
+
+    <template id="cell-template">
+      <article class="cell">
+        <div class="cell-shell">
+          <aside class="cell-gutter">
+            <div class="cell-prompt">[ ]</div>
+          </aside>
+          <div class="cell-main">
+            <div class="cell-chrome">
+              <div class="cell-label-wrap">
+                <span class="cell-kind">Code</span>
+                <span class="cell-status">Idle</span>
+              </div>
+              <div class="cell-actions">
+                <button class="run-cell cell-run-button" type="button" aria-label="Run cell">Run</button>
+                <details class="cell-menu">
+                  <summary class="cell-menu-toggle" aria-label="Cell actions">...</summary>
+                  <div class="cell-menu-panel">
+                    <button class="debug-cell secondary" type="button">Experimental Debug</button>
+                    <button class="run-to-cell secondary" type="button">Run To Here</button>
+                    <button class="insert-below secondary" type="button">Insert Below</button>
+                    <button class="duplicate-cell secondary" type="button">Duplicate</button>
+                    <button class="toggle-kind secondary" type="button">Toggle Type</button>
+                    <button class="toggle-breakpoint secondary" type="button">Breakpoint</button>
+                    <button class="move-up secondary" type="button">Move Up</button>
+                    <button class="move-down secondary" type="button">Move Down</button>
+                    <button class="clear-output secondary" type="button">Clear Output</button>
+                    <button class="delete-cell danger" type="button">Delete</button>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <label class="editor-label">
+              <span class="editor-mode-label">Python</span>
+              <textarea
+                class="cell-editor"
+                spellcheck="false"
+                aria-label="Code cell editor"
+              ></textarea>
+            </label>
+            <section class="markdown-preview-block">
+              <div class="output-header">
+                <span>Preview</span>
+              </div>
+              <div class="cell-markdown-preview"></div>
+            </section>
+            <section class="output-block">
+              <div class="output-header">
+                <span>Output</span>
+              </div>
+              <div class="cell-output-list"></div>
+            </section>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <input
+      id="ipynb-file-input"
+      class="visually-hidden"
+      type="file"
+      accept=".ipynb,application/json"
+    />
+    <input
+      id="workspace-file-input"
+      class="visually-hidden"
+      type="file"
+      multiple
+      webkitdirectory
+    />
+    <dialog id="quick-open-dialog" class="quick-open-dialog">
+      <form method="dialog" class="quick-open-card">
+        <label class="editor-label">
+          <span>Quick Open</span>
+          <input
+            id="quick-open-input"
+            class="panel-filter"
+            type="text"
+            placeholder="Type a file name"
+            aria-label="Quick open"
+          />
+        </label>
+        <div id="quick-open-results" class="launcher-recent-list"></div>
+      </form>
+    </dialog>
+
+    <dialog id="help-dialog" class="app-dialog">
+      <form method="dialog" class="app-dialog-card">
+        <div class="app-dialog-header">
+          <div>
+            <p class="eyebrow">Help</p>
+            <h2>Py-Whole Help</h2>
+          </div>
+          <button class="secondary" type="submit">Close</button>
+        </div>
+        <div class="help-sections">
+          <section class="help-section">
+            <h3>Getting Started</h3>
+            <p class="panel-copy">
+              Py-Whole is a browser-based offline notebook workspace. Open or create a notebook,
+              write Python or markdown cells, and run code directly in the embedded Pyodide runtime.
+            </p>
+            <ul class="help-list">
+              <li>`Shift+Enter` runs the active cell and advances.</li>
+              <li>`Ctrl+S` or `Cmd+S` saves the current notebook and workspace state.</li>
+              <li>Use the `Packages` panel to load bundled packages beyond the default runtime set.</li>
+              <li>Use `Project Files` for notebooks, text files, and import/export workflows.</li>
+            </ul>
+          </section>
+
+          <section class="help-section">
+            <h3>Runtime Notes</h3>
+            <p class="panel-copy">
+              Runtime execution is fully local inside the browser. Large packages are bundled into the
+              single-file release but are loaded into the Python environment only when you request them.
+            </p>
+            <ul class="help-list">
+              <li>The first runtime start may take longer while the embedded Python environment initializes.</li>
+              <li>Interrupt requests are cooperative and may not stop execution in the middle of every operation.</li>
+              <li>The experimental debug mode is intended for lightweight inspection and breakpoint-driven stepping, not full IDE-class debugging.</li>
+              <li>Use `Run Runtime Check` to verify package availability and the local matplotlib backend on this device.</li>
+            </ul>
+          </section>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="legal-dialog" class="app-dialog">
+      <form method="dialog" class="app-dialog-card">
+        <div class="app-dialog-header">
+          <div>
+            <p class="eyebrow">Legal</p>
+            <h2>Generic Privacy Policy</h2>
+          </div>
+          <button class="secondary" type="submit">Close</button>
+        </div>
+        <div class="help-sections">
+          <section class="help-section">
+            <p class="panel-copy">
+              Py-Whole is designed to operate locally in your browser and does not collect,
+              transmit, sell, or share user data with Numerius Engineering LLC.
+            </p>
+            <ul class="help-list">
+              <li>No account sign-in is required.</li>
+              <li>No analytics, telemetry, or remote usage tracking are built into this offline application.</li>
+              <li>Notebook content, workspace files, and saved state remain on the local device unless you explicitly export or share them.</li>
+              <li>If you host this file yourself, any server logging or network policy is controlled by that hosting environment, not by the application logic.</li>
+              <li>Support contact: `numerius.engineering@gmail.com`.</li>
+            </ul>
+          </section>
+        </div>
+      </form>
+    </dialog>
+
+    <script>
+window.__PYWHOLE_EMBEDDED_PYODIDE__ = {"available":true,"version":"0.28.2","indexURL":"./pyodide/","lockFileURL":"./pyodide/pyodide-lock.json","bundledPackages":["bokeh","contourpy","cycler","decorator","fonttools","imageio","jinja2","kiwisolver","libopenblas","markupsafe","matplotlib","mpmath","networkx","numpy","opencv","packaging","pandas","patsy","pillow","pyparsing","python-dateutil","pytz","pywavelets","pyyaml","scikit-image","scipy","setuptools","six","statsmodels","sympy","tqdm","typing-extensions","xarray","xyzservices"],"assets":null};
+window.__PYWHOLE_RUNTIME_WORKER_URL__ = "./pyodide_worker.js";
+    </script>
+
+
+
+    <script src="./vendor/codemirror/lib/codemirror.min.js"></script>
+    <script src="./vendor/codemirror/addon/edit/closebrackets.min.js"></script>
+    <script src="./vendor/codemirror/addon/edit/matchbrackets.min.js"></script>
+    <script src="./vendor/codemirror/mode/xml/xml.min.js"></script>
+    <script src="./vendor/codemirror/mode/javascript/javascript.min.js"></script>
+    <script src="./vendor/codemirror/mode/css/css.min.js"></script>
+    <script src="./vendor/codemirror/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="./vendor/codemirror/mode/markdown/markdown.min.js"></script>
+    <script src="./vendor/codemirror/mode/python/python.min.js"></script>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
