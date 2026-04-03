@@ -1068,6 +1068,12 @@ json.dumps(results)
         "Runtime is not initialized. Click 'Initialize Runtime' before running cells.",
       );
     }
+    const missingDefaultPackages = DEFAULT_PRELOADED_PACKAGES.filter(
+      (packageName) => BUNDLED_PACKAGE_SET.has(packageName) && !this.loadedPackages.has(packageName),
+    );
+    if (missingDefaultPackages.length) {
+      await this.ensurePackagesLoaded(missingDefaultPackages);
+    }
     if (this.useWorkerRuntime()) {
       const result = await this.callWorker("execute", { source, options });
       const outputs = [];
