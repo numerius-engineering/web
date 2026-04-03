@@ -538,8 +538,11 @@
     </dialog>
 
     <script>
+const __pywholeBaseUrl = new URL("./", window.location.href).href;
 window.__PYWHOLE_EMBEDDED_PYODIDE__ = {"available":true,"version":"0.28.2","indexURL":"./pyodide/","lockFileURL":"./pyodide/pyodide-lock.json","bundledPackages":["bokeh","contourpy","cycler","decorator","fonttools","imageio","jinja2","kiwisolver","libopenblas","markupsafe","matplotlib","mpmath","networkx","numpy","opencv","packaging","pandas","patsy","pillow","pyparsing","python-dateutil","pytz","pywavelets","pyyaml","scikit-image","scipy","setuptools","six","statsmodels","sympy","tqdm","typing-extensions","xarray","xyzservices"],"assets":null};
-window.__PYWHOLE_RUNTIME_WORKER_URL__ = "./pyodide_worker.js";
+window.__PYWHOLE_EMBEDDED_PYODIDE__.indexURL = new URL("./pyodide/", __pywholeBaseUrl).href;
+window.__PYWHOLE_EMBEDDED_PYODIDE__.lockFileURL = new URL("./pyodide/pyodide-lock.json", __pywholeBaseUrl).href;
+window.__PYWHOLE_RUNTIME_WORKER_URL__ = new URL("./pyodide_worker.js", __pywholeBaseUrl).href;
     </script>
 
 

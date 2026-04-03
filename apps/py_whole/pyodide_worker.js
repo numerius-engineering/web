@@ -1,6 +1,9 @@
 self.window = self;
+const __pywholeWorkerBaseUrl = new URL('./', self.location.href).href;
 self.__PYWHOLE_EMBEDDED_PYODIDE__ = {"available":true,"version":"0.28.2","indexURL":"./pyodide/","lockFileURL":"./pyodide/pyodide-lock.json","bundledPackages":["bokeh","contourpy","cycler","decorator","fonttools","imageio","jinja2","kiwisolver","libopenblas","markupsafe","matplotlib","mpmath","networkx","numpy","opencv","packaging","pandas","patsy","pillow","pyparsing","python-dateutil","pytz","pywavelets","pyyaml","scikit-image","scipy","setuptools","six","statsmodels","sympy","tqdm","typing-extensions","xarray","xyzservices"],"assets":null};
-importScripts("./pyodide/pyodide.js");
+self.__PYWHOLE_EMBEDDED_PYODIDE__.indexURL = new URL('./pyodide/', __pywholeWorkerBaseUrl).href;
+self.__PYWHOLE_EMBEDDED_PYODIDE__.lockFileURL = new URL('./pyodide/pyodide-lock.json', __pywholeWorkerBaseUrl).href;
+importScripts(new URL("./pyodide/pyodide.js", self.location.href).href);
 
 const EMBEDDED_PYODIDE = self.__PYWHOLE_EMBEDDED_PYODIDE__ || { available: false };
 const BUNDLED_PACKAGE_SET = new Set(EMBEDDED_PYODIDE.bundledPackages || []);
