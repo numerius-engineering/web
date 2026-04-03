@@ -1406,6 +1406,22 @@ def _pywhole_capture_figures():
         _pywhole_push_output({"kind": "image", "mime": "image/png", "data": encoded})
     plt.close("all")
 
+def _pywhole_capture_specific_figure(figure):
+    try:
+        import io
+        import matplotlib.pyplot as plt
+    except Exception:
+        return
+
+    if figure is None:
+        return
+
+    buffer = io.BytesIO()
+    figure.savefig(buffer, format="png", bbox_inches="tight")
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    _pywhole_push_output({"kind": "image", "mime": "image/png", "data": encoded})
+    plt.close(figure)
+
 def _pywhole_patch_matplotlib():
     try:
         import matplotlib
@@ -1413,6 +1429,34 @@ def _pywhole_patch_matplotlib():
         matplotlib.rcParams["backend"] = "Agg"
         import matplotlib.pyplot as plt
         plt.switch_backend("Agg")
+        from matplotlib._pylab_helpers import Gcf
+
+        def _pywhole_show(*args, **kwargs):
+            managers = list(Gcf.get_all_fig_managers())
+            if managers:
+                for manager in managers:
+                    figure = getattr(manager, "canvas", None)
+                    figure = getattr(figure, "figure", None)
+                    _pywhole_capture_specific_figure(figure)
+                return None
+            _pywhole_capture_figures()
+            return None
+
+        plt.show = _pywhole_show
+        try:
+            import matplotlib.figure as _pywhole_figure
+            _pywhole_figure.Figure.show = lambda self, *args, **kwargs: _pywhole_capture_specific_figure(self)
+        except Exception:
+            pass
+        try:
+            import matplotlib.backend_bases as _pywhole_backend_bases
+            _pywhole_backend_bases.FigureManagerBase.show = (
+                lambda self, *args, **kwargs: _pywhole_capture_specific_figure(
+                    getattr(getattr(self, "canvas", None), "figure", None),
+                )
+            )
+        except Exception:
+            pass
         plt.pause = lambda *args, **kwargs: None
     except Exception:
         pass
