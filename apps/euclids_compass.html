@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="application-name" content="Euclid's Compass">
+<meta name="application-version" content="1.0.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Euclid's Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --walnut-dark:   #241509;
+    --walnut:        #3b2417;
+    --walnut-light:  #5a3a24;
+    --walnut-seam:   rgba(0,0,0,0.35);
+    --brass:         #b08d4f;
+    --brass-bright:  #d4ac6e;
+    --vellum:        #efe3c2;
+    --vellum-edge:   #d9c496;
+    --ink:           #2b2016;
+    --ink-soft:      #5a4c3a;
+    --wax:           #8c2f21;
+    --wax-bright:    #b1493d;
+    --panel-text:    #e9dcc0;
+    --panel-text-dim:#b8a684;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    height:100%; margin:0;
+    font-family:'Inter',sans-serif;
+    color:var(--panel-text);
+    overflow:hidden;
+  }
+
+  body{
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.05) 0px, rgba(0,0,0,0.05) 1px, transparent 2px, transparent 5px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, transparent 40px, rgba(255,255,255,0.02) 80px, transparent 140px),
+      radial-gradient(ellipse at 50% -10%, #5a3a24, transparent 60%),
+      linear-gradient(180deg, var(--walnut) 0%, var(--walnut-dark) 100%);
+  }
+
+  h1,h2,h3{ font-family:'Fraunces',serif; margin:0; }
+
+  button{ font-family:'Inter',sans-serif; }
+
+  /* ---------- layout ---------- */
+  .app{
+    display:grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 64px 1fr 264px;
+    grid-template-areas:
+      "header header header"
+      "toolbar canvas sidebar"
+      "toolbar status sidebar";
+    height:100vh;
+    gap:1px;
+  }
+
+  header{
+    grid-area:header;
+    display:flex; align-items:baseline; gap:14px;
+    padding:14px 20px 10px 20px;
+    border-bottom:1px solid var(--walnut-seam);
+  }
+  header h1{
+    font-size:22px; font-weight:600; letter-spacing:0.01em;
+    color:var(--panel-text);
+  }
+  header h1 .glyph{ color:var(--brass-bright); font-style:italic; font-weight:500; }
+  .version-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.02em;
+    color:var(--panel-text-dim); background:rgba(0,0,0,0.22);
+    border:1px solid var(--walnut-seam); border-radius:10px; padding:2px 7px;
+    vertical-align:middle;
+  }
+  .help-modal-header h2 .version-badge{ font-size:9.5px; margin-left:2px; }
+  .help-legal .version-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:10px; background:none;
+    border:none; padding:0; color:inherit; font-weight:600;
+  }
+  header .subtitle{
+    font-size:11px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--panel-text-dim); font-family:'IBM Plex Mono',monospace;
+  }
+  header .spacer{ flex:1; }
+  header .readout{
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:var(--brass-bright); text-align:right; line-height:1.5;
+  }
+  header .readout span{ color:var(--panel-text-dim); }
+
+  /* ---------- toolbar ---------- */
+  .toolbar{
+    grid-area:toolbar;
+    display:flex; flex-direction:column; align-items:center;
+    gap:6px; padding:12px 0;
+    background:linear-gradient(180deg, var(--walnut-light), var(--walnut));
+    border-right:1px solid var(--walnut-seam);
+  }
+  .tool-btn{
+    width:44px; height:44px;
+    display:flex; align-items:center; justify-content:center;
+    background:transparent; border:1px solid transparent; border-radius:6px;
+    color:var(--panel-text-dim); cursor:pointer;
+    transition:background .12s, color .12s, border-color .12s;
+  }
+  .tool-btn svg{ width:24px; height:24px; }
+  .tool-btn:hover{ color:var(--panel-text); background:rgba(255,255,255,0.05); }
+  .tool-btn.active{
+    color:var(--walnut-dark);
+    background:var(--brass-bright);
+    border-color:var(--brass);
+    box-shadow:0 0 0 1px var(--walnut-seam) inset, 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .tool-sep{ width:28px; height:1px; background:var(--walnut-seam); margin:6px 0; }
+  .tool-label{
+    font-size:8px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--panel-text-dim); margin-top:-4px;
+  }
+
+  /* ---------- canvas area ---------- */
+  .canvas-outer{
+    grid-area:canvas;
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    padding:16px;
+    min-width:0; min-height:0;
+    background:radial-gradient(ellipse at 50% 30%, rgba(0,0,0,0.05), rgba(0,0,0,0.25) 120%);
+  }
+  .vellum{
+    position:relative;
+    width:100%; height:100%;
+    border-radius:3px;
+    background:
+      radial-gradient(ellipse at 28% 18%, rgba(255,255,255,0.25), transparent 55%),
+      linear-gradient(155deg, #f2e6c4 0%, #ecdcae 45%, #ddc793 100%);
+    box-shadow:
+      inset 0 0 2px rgba(255,255,255,0.4),
+      inset 0 0 70px rgba(90,56,30,0.32),
+      0 14px 34px rgba(0,0,0,0.55);
+    overflow:hidden;
+  }
+  .vellum::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity:0.06; mix-blend-mode:multiply; pointer-events:none;
+  }
+  .vellum::after{
+    content:"";
+    position:absolute; inset:0;
+    box-shadow: inset 0 0 40px 10px rgba(90,56,30,0.28);
+    pointer-events:none;
+  }
+  canvas{ position:relative; display:block; width:100%; height:100%; cursor:crosshair; }
+
+  /* ---------- status bar ---------- */
+  .status{
+    grid-area:status;
+    display:flex; align-items:center; gap:16px;
+    padding:8px 20px; font-size:12px;
+    border-top:1px solid var(--walnut-seam);
+    font-family:'IBM Plex Mono',monospace; color:var(--panel-text-dim);
+  }
+  .status .instruction{ color:var(--panel-text); flex:1; }
+  .status .badge{
+    padding:2px 8px; border-radius:3px; border:1px solid var(--walnut-seam);
+    background:rgba(0,0,0,0.2);
+  }
+  .status .badge.rigid{ color:var(--brass-bright); border-color:var(--brass); }
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    grid-area:sidebar;
+    display:flex; flex-direction:column;
+    background:linear-gradient(180deg, var(--walnut-light), var(--walnut));
+    border-left:1px solid var(--walnut-seam);
+    overflow-y:auto;
+  }
+  .panel{ padding:14px 16px; border-bottom:1px solid var(--walnut-seam); }
+  .panel h2{
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--brass-bright); font-weight:600; margin-bottom:10px;
+    font-family:'Inter',sans-serif;
+  }
+  .panel-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .btn{
+    font-size:11px; padding:6px 10px; border-radius:4px;
+    background:rgba(0,0,0,0.2); border:1px solid var(--walnut-seam);
+    color:var(--panel-text); cursor:pointer; letter-spacing:.02em;
+  }
+  .btn:hover{ background:rgba(0,0,0,0.32); }
+  .btn.primary{ background:var(--brass); color:var(--walnut-dark); border-color:var(--brass-bright); font-weight:600;}
+  .btn.primary:hover{ background:var(--brass-bright); }
+  .btn.danger{ color:var(--wax-bright); }
+  .btn.wide{ flex:1; text-align:center; }
+
+  .layer-row{
+    display:flex; align-items:center; gap:4px;
+    padding:6px 5px; border-radius:5px; margin-bottom:4px;
+    border:1px solid transparent; cursor:pointer;
+  }
+  .layer-row.active{ border-color:var(--brass); background:rgba(176,141,79,0.12); }
+  .layer-row.flash{ background:rgba(176,141,79,0.5); transition:background .55s ease; }
+
+  .clear-locked-row{
+    display:flex; align-items:center; gap:7px; margin-top:8px;
+    font-size:11px; color:var(--panel-text-dim); cursor:pointer; user-select:none;
+  }
+  .clear-locked-row input[type=checkbox]{
+    width:14px; height:14px; accent-color:var(--wax-bright); cursor:pointer;
+  }
+  .layer-row input[type=text]{
+    flex:1; background:transparent; border:none; color:var(--panel-text);
+    font-size:12.5px; font-family:'Inter',sans-serif; min-width:0;
+  }
+  .layer-row input[type=text]:focus{ outline:none; border-bottom:1px solid var(--brass); }
+  .swatch{
+    width:16px; height:16px; border-radius:50%; border:1px solid rgba(0,0,0,0.4);
+    flex:none; cursor:pointer; padding:0;
+  }
+  .eye{
+    width:18px; height:18px; flex:none; cursor:pointer; background:none; border:none;
+    color:var(--panel-text-dim); display:flex; align-items:center; justify-content:center;
+  }
+  .eye.hidden{ color:rgba(233,220,192,0.25); }
+  .eye.locked{ color:var(--wax-bright); }
+  .eye svg{ width:15px; height:15px; }
+  select.dash-select{
+    background:rgba(0,0,0,0.25); color:var(--panel-text); border:1px solid var(--walnut-seam);
+    font-size:10.5px; border-radius:3px; padding:2px 3px; flex:none; max-width:64px;
+  }
+  .layer-del{
+    background:none; border:none; color:var(--panel-text-dim); cursor:pointer; flex:none;
+    width:18px; font-size:14px; line-height:1;
+  }
+  .layer-del:hover{ color:var(--wax-bright); }
+
+  .props-empty{ font-size:12px; color:var(--panel-text-dim); font-style:italic; }
+  .props-line{ font-size:12px; font-family:'IBM Plex Mono',monospace; margin-bottom:4px; color:var(--panel-text); }
+  .props-line span{ color:var(--panel-text-dim); }
+
+  .help ul{ margin:0; padding-left:16px; font-size:11.5px; color:var(--panel-text-dim); line-height:1.7; }
+  .help li b{ color:var(--panel-text); }
+
+  input[type=color]{
+    -webkit-appearance:none; appearance:none; width:16px; height:16px; border:none; padding:0;
+    background:none; cursor:pointer; border-radius:50%; overflow:hidden;
+  }
+  input[type=color]::-webkit-color-swatch-wrapper{ padding:0; }
+  input[type=color]::-webkit-color-swatch{ border:1px solid rgba(0,0,0,0.4); border-radius:50%; }
+
+  /* ---------- touch handling ---------- */
+  .canvas-outer{ touch-action:none; }
+  .tool-btn, .btn, .eye, .layer-del{ touch-action:manipulation; }
+
+  /* ---------- mobile menu controls (hidden on desktop) ---------- */
+  .menu-btn, .sidebar-close, .backdrop{ display:none; }
+
+  /* ---------- help button & modal (always available) ---------- */
+  .help-btn{
+    width:32px; height:32px; border-radius:50%; flex:none;
+    background:rgba(255,255,255,0.06); border:1px solid var(--brass);
+    color:var(--brass-bright); font-family:'Fraunces',serif; font-size:15px; font-weight:600;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    touch-action:manipulation;
+  }
+  .help-btn:hover{ background:rgba(176,141,79,0.18); }
+
+  .help-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6);
+    z-index:40; display:none;
+  }
+  .help-backdrop.open{ display:block; }
+
+  .help-modal{
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(640px, 92vw); max-height:84vh;
+    background:var(--walnut); border:1px solid var(--brass); border-radius:8px;
+    box-shadow:0 24px 60px rgba(0,0,0,0.6);
+    z-index:41; display:none; flex-direction:column; overflow:hidden;
+  }
+  .help-modal.open{ display:flex; }
+  .help-modal-header{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:14px 18px; border-bottom:1px solid var(--walnut-seam); flex:none;
+  }
+  .help-modal-header h2{ font-size:15px; color:var(--panel-text); font-weight:600; }
+  .help-close{
+    width:28px; height:28px; border-radius:6px; flex:none;
+    background:rgba(255,255,255,0.06); border:1px solid var(--walnut-seam);
+    color:var(--panel-text); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .help-close svg{ width:15px; height:15px; }
+
+  .help-modal-body{
+    overflow-y:auto; padding:20px 24px 26px;
+    background:
+      radial-gradient(ellipse at 30% 8%, rgba(255,255,255,0.14), transparent 55%),
+      linear-gradient(160deg, #f2e6c4 0%, #e6d6ab 55%, #d9c48f 100%);
+    color:var(--ink); font-family:'Inter',sans-serif; font-size:13px; line-height:1.65;
+  }
+  .help-modal-body h3{
+    font-family:'Fraunces',serif; font-size:15.5px; font-weight:600;
+    margin:20px 0 8px; color:var(--ink);
+  }
+  .help-modal-body h3:first-child{ margin-top:0; }
+  .help-modal-body p{ margin:0 0 10px; }
+  .help-modal-body ul, .help-modal-body ol{ margin:0 0 10px 20px; padding:0; }
+  .help-modal-body li{ margin-bottom:5px; }
+  .help-modal-body a{ color:#6b3620; font-weight:600; }
+  .help-modal-body hr{ border:none; border-top:1px solid rgba(43,32,22,0.2); margin:18px 0 10px; }
+  .help-legal{ font-size:11px; color:#6b5c42; margin:0; }
+
+  @media (max-width: 480px){
+    .help-modal{ width:94vw; max-height:88vh; }
+    .help-modal-body{ padding:16px 16px 22px; font-size:12.5px; }
+  }
+
+  /* ---------- responsive layout ---------- */
+  @media (max-width: 860px){
+    .app{
+      grid-template-rows: auto 1fr 74px;
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "header"
+        "canvas"
+        "toolbar";
+    }
+    .status{ display:none; } /* instructions move into a compact strip below */
+    header{ padding:10px 14px 8px; }
+    header h1{ font-size:18px; }
+    header .subtitle{ display:none; }
+    header .readout{ display:none; }
+
+    .menu-btn{
+      display:flex; align-items:center; justify-content:center;
+      width:36px; height:36px; border-radius:6px;
+      background:rgba(255,255,255,0.06); border:1px solid var(--walnut-seam);
+      color:var(--panel-text); cursor:pointer;
+    }
+    .menu-btn svg{ width:20px; height:20px; }
+
+    .toolbar{
+      flex-direction:row; align-items:center; justify-content:flex-start;
+      overflow-x:auto; -webkit-overflow-scrolling:touch;
+      border-right:none; border-top:1px solid var(--walnut-seam);
+      padding:8px 8px; gap:4px;
+    }
+    .tool-btn{ width:52px; height:52px; flex:none; }
+    .tool-btn svg{ width:26px; height:26px; }
+    .tool-label{ display:none; }
+    .tool-sep{ width:1px; height:32px; margin:0 4px; flex:none; }
+
+    .canvas-outer{ padding:10px; }
+
+    /* mobile instruction strip pinned above the toolbar */
+    .mobile-instruction{
+      display:block;
+      position:absolute; left:10px; right:10px; bottom:calc(74px + 10px);
+      padding:8px 12px; border-radius:6px;
+      background:rgba(36,21,9,0.86); border:1px solid var(--walnut-seam);
+      color:var(--panel-text); font-size:12.5px; font-family:'IBM Plex Mono',monospace;
+      pointer-events:none; text-align:center;
+      box-shadow:0 6px 16px rgba(0,0,0,0.4);
+    }
+
+    /* sidebar becomes a slide-in drawer */
+    .sidebar{
+      position:fixed; top:0; right:0; bottom:0;
+      width:min(320px, 86vw);
+      transform:translateX(100%);
+      transition:transform .22s ease;
+      z-index:20;
+      box-shadow:-10px 0 30px rgba(0,0,0,0.5);
+    }
+    .sidebar.open{ transform:translateX(0); }
+    .sidebar-header{ display:flex !important; }
+    .sidebar-close{
+      display:flex; align-items:center; justify-content:center;
+      width:32px; height:32px; margin-left:auto;
+      background:rgba(255,255,255,0.06); border:1px solid var(--walnut-seam);
+      border-radius:6px; color:var(--panel-text); cursor:pointer;
+    }
+    .sidebar-close svg{ width:16px; height:16px; }
+
+    .backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,0.45);
+      z-index:15; opacity:0; pointer-events:none; transition:opacity .2s ease;
+    }
+    .backdrop.open{ display:block; opacity:1; pointer-events:auto; }
+  }
+
+  .mobile-instruction{ display:none; }
+
+  /* ---------- check-equivalence banner ---------- */
+  .check-banner{
+    position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    max-width:calc(100% - 40px);
+    padding:9px 16px; border-radius:6px;
+    font-family:'IBM Plex Mono',monospace; font-size:12.5px;
+    background:rgba(36,21,9,0.92); color:var(--panel-text);
+    border:1px solid var(--brass);
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+    display:flex; align-items:center; gap:8px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .check-banner.equal{ border-color:#5a7a63; }
+  .check-banner.equal .check-verdict{ color:#8fbf9e; }
+  .check-banner.notequal{ border-color:var(--wax-bright); }
+  .check-banner.notequal .check-verdict{ color:var(--wax-bright); }
+  .check-verdict{ font-weight:600; letter-spacing:.03em; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1><span class="glyph">Euclid's</span> Compass <span class="version-badge" data-version-slot>v0.0.0</span></h1>
+    <div class="subtitle">straightedge &amp; compass, on vellum</div>
+    <div class="spacer"></div>
+    <div class="readout" id="readout">
+      <div><span>tool</span> select</div>
+      <div><span>compass</span> collapsing</div>
+    </div>
+    <button class="help-btn" id="helpBtn" title="Help &amp; about">?</button>
+    <button class="menu-btn" id="menuBtn" title="Layers &amp; settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </header>
+
+  <aside class="toolbar" id="toolbar">
+    <!-- tool buttons injected by JS -->
+  </aside>
+
+  <div class="canvas-outer">
+    <div class="vellum">
+      <canvas id="canvas"></canvas>
+    </div>
+    <div class="mobile-instruction" id="mobileInstruction">Select a tool to begin.</div>
+    <div class="check-banner" id="checkBanner" style="display:none;"></div>
+  </div>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <div class="status">
+    <div class="instruction" id="instruction">Select a tool from the left to begin.</div>
+    <div class="badge" id="radiusBadge" style="display:none;"></div>
+    <div class="badge" id="modeBadge">collapsing</div>
+  </div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="panel sidebar-header" style="display:none; border-bottom:none; padding-bottom:0;">
+      <button class="sidebar-close" id="sidebarClose" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
+    <div class="panel">
+      <h2>Layers</h2>
+      <div id="layerList"></div>
+      <div class="panel-row" style="margin-top:8px;">
+        <button class="btn wide" id="addLayerBtn">+ Add layer</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Selection</h2>
+      <div id="propsBody"><div class="props-empty">Nothing selected.</div></div>
+      <div class="panel-row" style="margin-top:8px;">
+        <button class="btn" id="extendSelBtn" style="display:none;">Extend / trim</button>
+        <button class="btn danger" id="deleteSelBtn">Delete</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Canvas</h2>
+      <div class="panel-row">
+        <button class="btn wide" id="undoBtn">Undo</button>
+        <button class="btn wide" id="redoBtn">Redo</button>
+      </div>
+      <div class="panel-row">
+        <button class="btn wide" id="exportBtn">Export PNG</button>
+        <button class="btn wide danger" id="clearBtn">Clear all</button>
+      </div>
+      <label class="clear-locked-row">
+        <input type="checkbox" id="clearLockedChk">
+        <span>Also clear locked layers</span>
+      </label>
+    </div>
+
+    <div class="panel help">
+      <h2>How it works</h2>
+      <ul>
+        <li><b>Point</b> — click to place; snaps to nearby points and intersections.</li>
+        <li><b>Line</b> — click two points to draw a straight segment.</li>
+        <li><b>Compass</b> — click a centre, then a radius point. Toggle <b>Arc</b> to swing only part of the circle.</li>
+        <li><b>Transport</b> — click two points to capture a length, then click a centre to stamp that length elsewhere.</li>
+        <li><b>Select</b> — drag points to move them; press Delete to remove.</li>
+        <li><b>Eraser</b> — click or drag across items to delete them quickly.</li>
+        <li>Scroll to zoom, right-drag (or hold Space) to pan.</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<div class="help-backdrop" id="helpBackdrop"></div>
+<div class="help-modal" id="helpModal">
+  <div class="help-modal-header">
+    <h2>Euclid's Compass <span class="version-badge" data-version-slot>v0.0.0</span> — Help &amp; About</h2>
+    <button class="help-close" id="helpClose" title="Close">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="help-modal-body">
+
+    <h3>What this is</h3>
+    <p>A single-file straightedge-and-compass construction tool — the same constructions Euclid
+    works through in the <em>Elements</em> — with layers, an equivalence checker, and touch support.
+    Everything runs locally in the browser; nothing you draw leaves this page.</p>
+
+    <h3>Tools</h3>
+    <ul>
+      <li><b>Select</b> — click a point, line, or circle/arc to select it. Drag a point to move it.
+        Delete/Backspace removes it. Click a layer in the panel to move the selection there.</li>
+      <li><b>Eraser</b> — click an object to delete it, or drag across several to erase a whole
+        stroke's worth at once, without opening the Layers panel.</li>
+      <li><b>Point</b> — click to place a point; snaps to existing points and computed intersections.</li>
+      <li><b>Line</b> — click two points to draw a straight segment — the straightedge.</li>
+      <li><b>Compass</b> — click a centre, then a radius point, to draw a circle. Toggle
+        <b>Arc</b> to swing only part of the circle. Toggle <b>Collapsing</b> / <b>Rigid</b> to
+        control whether the compass keeps its span after being lifted.</li>
+      <li><b>Transport</b> — click two points to capture a length, click a centre, click a
+        direction — a point is placed exactly that distance away.</li>
+      <li><b>Check</b> — click two lines, two circles/arcs, or two angles to test them for
+        equality, with the difference shown.</li>
+    </ul>
+    <p>A selected line can be <b>extended or trimmed</b> to a new point, like sliding a straightedge
+    further along its own direction. Layers can be locked to protect their contents from editing,
+    deletion, or "Clear all." The canvas starts with two layers ready to go: <b>Base</b> (solid, red)
+    as the active drawing layer, and <b>Construction</b> (dotted, black) waiting in the queue for
+    auxiliary lines you don't want mixed into the main figure.</p>
+
+    <h3>Euclid's tools, and how this app maps to them</h3>
+    <p>Euclid's <em>Elements</em> opens with three postulates describing exactly two instruments: an
+    unmarked <b>straightedge</b>, used only to draw a line between two points or extend one, and a
+    <b>compass</b>, used to draw a circle with a given centre and radius.</p>
+    <p>Ancient tradition holds Euclid's compass was a <b>collapsing compass</b> — it lost its span
+    the moment it left the page. You couldn't just pick it up and carry a radius somewhere else; that
+    had to be <em>proven</em> possible, and that proof is Book I, Proposition 2. This app models both
+    traditions: <b>Collapsing</b> mode requires re-measuring every radius from scratch, while
+    <b>Rigid</b> mode holds its span like a modern drafting compass. The <b>Transport</b> tool
+    directly implements the method of Proposition I.2 — reproducing a captured length exactly at a
+    new location, in either compass mode. The <b>Check</b> tool mirrors the <em>Elements</em>'
+    Common Notions about equal magnitudes, letting you confirm a construction's claims of equality
+    instead of eyeballing them.</p>
+
+    <h3>Using this app with the text</h3>
+    <ol>
+      <li>Read a proposition's construction — Euclid gives it as a sequence of instructions
+        ("let the line AB be drawn," "with centre A and distance AB describe the circle BCD," ...).</li>
+      <li>Reproduce each step with the matching tool: <b>Point</b> for given points, <b>Line</b> for
+        straightedge steps, <b>Compass</b> for "describe a circle," <b>Transport</b> for steps that
+        copy a length.</li>
+      <li>Use <b>Check</b> once you're done to confirm the proposition's equality claims.</li>
+      <li>Use <b>Layers</b> to separate the problem's given elements from the construction lines you
+        add to solve it.</li>
+    </ol>
+    <p>A good starting point is Book I, Proposition 1 — an equilateral triangle built from two
+    circles and a line — using only the Point, Compass, and Line tools in sequence.</p>
+
+    <h3>The text, online</h3>
+    <p>This app doesn't include Euclid's text itself. For the full <em>Elements</em> (all 13 books)
+    with the original diagrams, see
+    <a href="https://www.euclids-elements.org/elements/" target="_blank" rel="noopener">David E. Joyce's edition of Euclid's Elements</a>
+    (Clark University) — free online, with its own
+    <a href="https://www.euclids-elements.org/geomlib/compass/" target="_blank" rel="noopener">compass geometry tutorial</a>
+    that pairs well with this app.</p>
+
+    <hr>
+    <p class="help-legal">Euclid's Compass <span data-version-slot>v0.0.0</span> · Copyright © 2026 Numerius Engineering LLC. Released under the MIT License —
+    free to use, modify, and redistribute, including commercially, provided the copyright notice is kept.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================== VERSION ==============================
+   Single source of truth for the app version. Every on-page display of
+   the version (header badge, help modal title, help modal footer, and
+   the <meta name="application-version"> tag) is driven from this one
+   constant at init time, so they can never drift out of sync. */
+const APP_VERSION = '1.2.0';
+
+/* ============================== ICONS ============================== */
+const ICONS = {
+  select: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 8-6 1.4L15.4 19 5 3z" fill="currentColor" fill-opacity="0.12"/></svg>`,
+  point: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="12" r="2.6" fill="currentColor"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>`,
+  line: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 20L20 4"/><circle cx="4" cy="20" r="2" fill="currentColor" stroke="none"/><circle cx="20" cy="4" r="2" fill="currentColor" stroke="none"/></svg>`,
+  compass: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-6 16M12 4l6 16"/><circle cx="12" cy="4" r="1.8" fill="currentColor" stroke="none"/><circle cx="6" cy="20" r="1.6" fill="currentColor" stroke="none"/><path d="M15 14a5 5 0 0 1-1.6 1.4" stroke-dasharray="1 3"/></svg>`,
+  transport: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="19" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="19" r="1.8" fill="currentColor" stroke="none"/><path d="M5 19h14"/><path d="M12 19V5"/><path d="M9 8l3-3 3 3"/></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/></svg>`,
+  eraser: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="12" height="8" rx="1.5" transform="rotate(-35 13 11)" fill="currentColor" fill-opacity="0.15"/><path d="M4 19h16"/></svg>`,
+  eyeOpen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>`,
+  eyeShut: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a15.6 15.6 0 0 1-3.4 4.3M6.6 6.6C4 8.3 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.9-.8"/><path d="M9.5 9.8a3 3 0 0 0 4.2 4.2"/></svg>`,
+  lockClosed: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
+  lockOpen: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 7.5-1.9"/></svg>`
+};
+
+const TOOLS = [
+  {id:'select', name:'Select'},
+  {id:'eraser', name:'Eraser'},
+  {id:'point', name:'Point'},
+  {id:'line', name:'Line'},
+  {id:'compass', name:'Compass'},
+  {id:'transport', name:'Transport'},
+  {id:'check', name:'Check'},
+];
+
+/* ============================== STATE ============================== */
+let nextId = 1;
+const uid = p => p + (nextId++);
+
+const PALETTE = ['#2b2016', '#8c2f21', '#3a5c46', '#3d4f7a', '#7a5230', '#6b3f6b'];
+let paletteIdx = 2;
+
+const layers = [
+  { id:'layer-1', name:'Base', color:'#8c2f21', dash:'solid', visible:true, locked:false },
+  { id:'layer-2', name:'Construction', color:'#2b2016', dash:'dotted', visible:true, locked:false }
+];
+const points = [];   // {id,x,y,layerId}
+const lines  = [];   // {id,p1,p2,layerId}  segment between two point ids
+const arcs   = [];   // {id,cx,cy,r,startAngle,endAngle,full,anticlockwise,layerId}
+
+let activeLayerId = 'layer-1';
+let tool = 'select';
+let compassSub = 'circle';     // 'circle' | 'arc'
+let compassMode = 'collapsing';// 'collapsing' | 'rigid'
+let savedRadius = null;
+
+let pending = null;   // in-progress multi-click construction
+
+let checkMode = 'lines';    // 'lines' | 'circles' | 'angles'
+let checkPending = null;    // in-progress equivalence check
+let checkResult = null;     // {ok, text} most recent result, shown in a banner
+let hoverSnap = null; // {x,y,existing:pointObj|null}
+let selection = null; // {type,id}
+let dragPoint = null; // point being dragged with select tool
+let lastPointerType = 'mouse';
+
+const view = { scale:1, ox:0, oy:0 };
+let isPanning = false, panStart=null, spaceDown=false;
+
+const undoStack = [], redoStack = [];
+function snapshot(){
+  return JSON.stringify({ layers, points, lines, arcs, activeLayerId, nextId, savedRadius });
+}
+function restore(json){
+  const d = JSON.parse(json);
+  layers.length=0; layers.push(...d.layers);
+  points.length=0; points.push(...d.points);
+  lines.length=0; lines.push(...d.lines);
+  arcs.length=0; arcs.push(...d.arcs);
+  activeLayerId = d.activeLayerId;
+  nextId = d.nextId;
+  savedRadius = d.savedRadius;
+  selection = null; pending = null;
+}
+function pushHistory(){
+  undoStack.push(snapshot());
+  if (undoStack.length > 60) undoStack.shift();
+  redoStack.length = 0;
+}
+function undo(){
+  if (!undoStack.length) return;
+  redoStack.push(snapshot());
+  restore(undoStack.pop());
+  renderAll();
+}
+function redo(){
+  if (!redoStack.length) return;
+  undoStack.push(snapshot());
+  restore(redoStack.pop());
+  renderAll();
+}
+
+/* ============================== GEOMETRY ============================== */
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+const EPS_LENGTH = 0.75;
+const EPS_ANGLE = 0.75; // degrees
+function angleAt(v,p1,p2){
+  const v1x=p1.x-v.x, v1y=p1.y-v.y, v2x=p2.x-v.x, v2y=p2.y-v.y;
+  const m1=Math.hypot(v1x,v1y), m2=Math.hypot(v2x,v2y);
+  if (m1<1e-9 || m2<1e-9) return 0;
+  let cos=(v1x*v2x+v1y*v2y)/(m1*m2);
+  cos=Math.max(-1,Math.min(1,cos));
+  return Math.acos(cos)*180/Math.PI;
+}
+const getPoint = id => points.find(p => p.id === id);
+const isLockedLayer = layerId => { const l=layers.find(x=>x.id===layerId); return !!(l && l.locked); };
+const TWO_PI = Math.PI*2;
+const norm = a => ((a % TWO_PI) + TWO_PI) % TWO_PI;
+
+function isAngleInArc(theta, arc){
+  if (arc.full) return true;
+  const t = norm(theta), s = norm(arc.startAngle), e = norm(arc.endAngle);
+  if (!arc.anticlockwise){
+    return s <= e ? (t>=s-1e-6 && t<=e+1e-6) : (t>=s-1e-6 || t<=e+1e-6);
+  } else {
+    return s >= e ? (t<=s+1e-6 && t>=e-1e-6) : (t<=s+1e-6 || t>=e-1e-6);
+  }
+}
+
+function intersectLineLine(l1, l2){
+  const p1=getPoint(l1.p1), p2=getPoint(l1.p2), p3=getPoint(l2.p1), p4=getPoint(l2.p2);
+  const d1x=p2.x-p1.x, d1y=p2.y-p1.y, d2x=p4.x-p3.x, d2y=p4.y-p3.y;
+  const denom = d1x*d2y - d1y*d2x;
+  if (Math.abs(denom) < 1e-9) return null;
+  const t = ((p3.x-p1.x)*d2y - (p3.y-p1.y)*d2x) / denom;
+  const u = ((p3.x-p1.x)*d1y - (p3.y-p1.y)*d1x) / denom;
+  if (t < -1e-6 || t > 1+1e-6 || u < -1e-6 || u > 1+1e-6) return null;
+  return { x: p1.x + t*d1x, y: p1.y + t*d1y };
+}
+
+function intersectLineCircle(line, arc){
+  const p1=getPoint(line.p1), p2=getPoint(line.p2);
+  const dx=p2.x-p1.x, dy=p2.y-p1.y;
+  const fx=p1.x-arc.cx, fy=p1.y-arc.cy;
+  const a=dx*dx+dy*dy, b=2*(fx*dx+fy*dy), c=fx*fx+fy*fy-arc.r*arc.r;
+  const disc=b*b-4*a*c;
+  if (disc<0 || a<1e-9) return [];
+  const sq=Math.sqrt(disc);
+  const out=[];
+  [(-b-sq)/(2*a), (-b+sq)/(2*a)].forEach(t=>{
+    if (t>=-1e-6 && t<=1+1e-6){
+      const pt={x:p1.x+t*dx, y:p1.y+t*dy};
+      if (isAngleInArc(Math.atan2(pt.y-arc.cy, pt.x-arc.cx), arc)) out.push(pt);
+    }
+  });
+  if (out.length===2 && dist(out[0],out[1])<1e-6) out.pop();
+  return out;
+}
+
+function intersectCircleCircle(a,b){
+  const d = Math.hypot(b.cx-a.cx, b.cy-a.cy);
+  if (d>a.r+b.r || d<Math.abs(a.r-b.r) || d<1e-9) return [];
+  const aa=(a.r*a.r-b.r*b.r+d*d)/(2*d);
+  const h2=a.r*a.r-aa*aa;
+  if (h2<0) return [];
+  const h=Math.sqrt(h2);
+  const xm=a.cx+aa*(b.cx-a.cx)/d, ym=a.cy+aa*(b.cy-a.cy)/d;
+  const pts=[
+    {x:xm+h*(b.cy-a.cy)/d, y:ym-h*(b.cx-a.cx)/d},
+    {x:xm-h*(b.cy-a.cy)/d, y:ym+h*(b.cx-a.cx)/d}
+  ].filter(p => isAngleInArc(Math.atan2(p.y-a.cy,p.x-a.cx),a) && isAngleInArc(Math.atan2(p.y-b.cy,p.x-b.cx),b));
+  if (pts.length===2 && dist(pts[0],pts[1])<1e-6) pts.pop();
+  return pts;
+}
+
+function allIntersections(){
+  const pts=[];
+  for (let i=0;i<lines.length;i++){
+    for (let j=i+1;j<lines.length;j++){
+      const p=intersectLineLine(lines[i],lines[j]);
+      if (p) pts.push(p);
+    }
+    for (const arc of arcs) intersectLineCircle(lines[i],arc).forEach(p=>pts.push(p));
+  }
+  for (let i=0;i<arcs.length;i++)
+    for (let j=i+1;j<arcs.length;j++)
+      intersectCircleCircle(arcs[i],arcs[j]).forEach(p=>pts.push(p));
+  return pts;
+}
+
+/* ============================== CANVAS / VIEW ============================== */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let DPR = Math.max(1, window.devicePixelRatio||1);
+
+function resizeCanvas(){
+  const rect = canvas.parentElement.getBoundingClientRect();
+  DPR = Math.max(1, window.devicePixelRatio||1);
+  canvas.width = rect.width*DPR;
+  canvas.height = rect.height*DPR;
+  canvas.style.width = rect.width+'px';
+  canvas.style.height = rect.height+'px';
+  renderAll();
+}
+window.addEventListener('resize', resizeCanvas);
+
+function worldToScreen(p){ return { x:(p.x*view.scale+view.ox), y:(p.y*view.scale+view.oy) }; }
+function screenToWorld(p){ return { x:(p.x-view.ox)/view.scale, y:(p.y-view.oy)/view.scale }; }
+function mouseWorld(evt){
+  const rect = canvas.getBoundingClientRect();
+  const sx = (evt.clientX-rect.left), sy=(evt.clientY-rect.top);
+  return screenToWorld({x:sx,y:sy});
+}
+
+/* ============================== SNAPPING ============================== */
+function findSnap(worldPt){
+  const tol = (lastPointerType==='touch' ? 20 : 12)/view.scale;
+  let best=null, bestD=tol;
+  for (const p of points){
+    const layer = layers.find(l=>l.id===p.layerId);
+    if (layer && !layer.visible) continue;
+    const d = dist(p, worldPt);
+    if (d < bestD){ bestD=d; best={x:p.x,y:p.y,existing:p}; }
+  }
+  if (best) return best;
+  for (const ip of allIntersections()){
+    const d = dist(ip, worldPt);
+    if (d < bestD){ bestD=d; best={x:ip.x,y:ip.y,existing:null}; }
+  }
+  return best;
+}
+
+function resolvePoint(worldPt){
+  if (hoverSnap && hoverSnap.existing) return hoverSnap.existing;
+  const loc = hoverSnap ? {x:hoverSnap.x,y:hoverSnap.y} : worldPt;
+  const p = { id:uid('pt'), x:loc.x, y:loc.y, layerId:activeLayerId };
+  points.push(p);
+  return p;
+}
+
+/* ============================== RENDERING ============================== */
+function dashFor(style){
+  if (style==='dashed') return [10,6];
+  if (style==='dotted') return [1.5,6];
+  return [];
+}
+
+function drawArcPath(a){
+  if (a.full){ ctx.arc(a.cx,a.cy,a.r,0,TWO_PI); }
+  else { ctx.arc(a.cx,a.cy,a.r,a.startAngle,a.endAngle,a.anticlockwise); }
+}
+
+function render(){
+  const rect = canvas.getBoundingClientRect();
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,rect.width,rect.height);
+
+  ctx.save();
+  ctx.translate(view.ox, view.oy);
+  ctx.scale(view.scale, view.scale);
+
+  // layers, back to front
+  for (const layer of layers){
+    if (!layer.visible) continue;
+    ctx.strokeStyle = layer.color;
+    ctx.fillStyle = layer.color;
+    ctx.lineWidth = 1.6/view.scale;
+    ctx.setLineDash(dashFor(layer.dash).map(v=>v/view.scale));
+    ctx.lineCap = 'round';
+
+    for (const l of lines){
+      if (l.layerId!==layer.id) continue;
+      const p1=getPoint(l.p1), p2=getPoint(l.p2);
+      if (!p1||!p2) continue;
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+      if (selection && selection.type==='line' && selection.id===l.id) strokeSelected(()=>{ ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); });
+    }
+    for (const a of arcs){
+      if (a.layerId!==layer.id) continue;
+      ctx.beginPath(); drawArcPath(a); ctx.stroke();
+      if (selection && selection.type==='arc' && selection.id===a.id) strokeSelected(()=>{ ctx.beginPath(); drawArcPath(a); });
+    }
+    ctx.setLineDash([]);
+    for (const p of points){
+      if (p.layerId!==layer.id) continue;
+      ctx.beginPath(); ctx.arc(p.x,p.y,3.2/view.scale,0,TWO_PI); ctx.fill();
+      if (selection && selection.type==='point' && selection.id===p.id){
+        ctx.save(); ctx.strokeStyle='#8c2f21'; ctx.lineWidth=1.6/view.scale;
+        ctx.beginPath(); ctx.arc(p.x,p.y,7/view.scale,0,TWO_PI); ctx.stroke(); ctx.restore();
+      }
+    }
+  }
+
+  // pending construction preview
+  drawPendingPreview();
+  drawExtendPreview();
+  drawCheckHighlights();
+  drawEraserHighlight();
+
+  // hover snap indicator
+  if (hoverSnap && (tool!=='select' || pendingExtend)){
+    ctx.save();
+    ctx.strokeStyle = hoverSnap.existing ? '#8c2f21' : '#b08d4f';
+    ctx.lineWidth = 1.4/view.scale;
+    ctx.beginPath(); ctx.arc(hoverSnap.x,hoverSnap.y,6/view.scale,0,TWO_PI); ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+function strokeSelected(pathFn){
+  ctx.save();
+  ctx.strokeStyle = '#8c2f21';
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = 4.5/view.scale;
+  ctx.setLineDash([]);
+  pathFn();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawExtendPreview(){
+  if (!pendingExtend || !lastMouseWorld) return;
+  const l = lines.find(x=>x.id===pendingExtend.lineId);
+  if (!l) return;
+  const p1=getPoint(l.p1), p2=getPoint(l.p2);
+  const cursor = hoverSnap ? {x:hoverSnap.x,y:hoverSnap.y} : lastMouseWorld;
+  const dirx=p2.x-p1.x, diry=p2.y-p1.y;
+  const len2=dirx*dirx+diry*diry;
+  if (len2<1e-9) return;
+  const t=((cursor.x-p1.x)*dirx+(cursor.y-p1.y)*diry)/len2;
+  // project the cursor back onto the line's own direction — this is where
+  // the endpoint will actually land, which may not be exactly under the cursor
+  const projX=p1.x+t*dirx, projY=p1.y+t*diry;
+  const anchor = (t<=0.5) ? p2 : p1;
+  ctx.save();
+  ctx.strokeStyle='#8c2f21';
+  ctx.setLineDash([6/view.scale,4/view.scale]);
+  ctx.lineWidth=1.6/view.scale;
+  ctx.beginPath(); ctx.moveTo(anchor.x,anchor.y); ctx.lineTo(projX,projY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#8c2f21';
+  ctx.beginPath(); ctx.arc(projX,projY,3.5/view.scale,0,TWO_PI); ctx.fill();
+  ctx.restore();
+}
+
+function drawEraserHighlight(){
+  if (tool!=='eraser' || !eraserHover) return;
+  const locked = !canDeleteObject(eraserHover.type, eraserHover.id);
+  ctx.save();
+  ctx.strokeStyle = locked ? '#5a4c3a' : '#8c2f21';
+  ctx.lineWidth = 4/view.scale;
+  ctx.globalAlpha = 0.8;
+  ctx.setLineDash(locked ? [3/view.scale, 3/view.scale] : []);
+  if (eraserHover.type==='point'){
+    const p=getPoint(eraserHover.id);
+    if (p){ ctx.beginPath(); ctx.arc(p.x,p.y,8/view.scale,0,TWO_PI); ctx.stroke(); }
+  } else if (eraserHover.type==='line'){
+    const l=lines.find(x=>x.id===eraserHover.id);
+    if (l){ const p1=getPoint(l.p1), p2=getPoint(l.p2); ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+  } else if (eraserHover.type==='arc'){
+    const a=arcs.find(x=>x.id===eraserHover.id);
+    if (a){ ctx.beginPath(); drawArcPath(a); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+
+function drawCheckHighlights(){
+  if (tool!=='check' || !checkPending) return;
+  ctx.save();
+  ctx.strokeStyle='#b08d4f';
+  ctx.lineWidth=4/view.scale;
+  ctx.setLineDash([]);
+
+  if (checkPending.picks){
+    const id = checkPending.picks[0];
+    if (checkMode==='lines'){
+      const l=lines.find(x=>x.id===id);
+      if (l){ const p1=getPoint(l.p1), p2=getPoint(l.p2); ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }
+    } else {
+      const a=arcs.find(x=>x.id===id);
+      if (a){ ctx.beginPath(); drawArcPath(a); ctx.stroke(); }
+    }
+  } else {
+    // angle mode: ring the picked points and draw the rays gathered so far
+    const dot = (id)=>{
+      const p=getPoint(id); if(!p) return;
+      ctx.beginPath(); ctx.arc(p.x,p.y,6/view.scale,0,TWO_PI); ctx.stroke();
+    };
+    const ray = (v,p)=>{
+      const a=getPoint(v), b=getPoint(p); if(!a||!b) return;
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    };
+    if (checkPending.v1) dot(checkPending.v1);
+    if (checkPending.a1){ dot(checkPending.a1); ray(checkPending.v1, checkPending.a1); }
+    if (checkPending.b1){ dot(checkPending.b1); ray(checkPending.v1, checkPending.b1); }
+    if (checkPending.v2) dot(checkPending.v2);
+    if (checkPending.a2){ dot(checkPending.a2); ray(checkPending.v2, checkPending.a2); }
+  }
+  ctx.restore();
+}
+
+function drawPendingPreview(){
+  if (!pending || !lastMouseWorld) return;
+  ctx.save();
+  ctx.strokeStyle = '#b08d4f';
+  ctx.setLineDash([6/view.scale,4/view.scale]);
+  ctx.lineWidth = 1.4/view.scale;
+  const cursor = hoverSnap ? {x:hoverSnap.x,y:hoverSnap.y} : lastMouseWorld;
+
+  if (pending.type==='line'){
+    const p1=getPoint(pending.p1);
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(cursor.x,cursor.y); ctx.stroke();
+  } else if (pending.type==='circleCenter'){
+    const c=getPoint(pending.center);
+    const r=dist(c,cursor);
+    ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(cursor.x,cursor.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.x,c.y,r,0,TWO_PI); ctx.stroke();
+  } else if (pending.type==='arcCenter'){
+    const c=getPoint(pending.center);
+    const r=dist(c,cursor);
+    ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(cursor.x,cursor.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.x,c.y,r,0,TWO_PI); ctx.stroke();
+  } else if (pending.type==='arcStart'){
+    const c=getPoint(pending.center);
+    const endAngle=Math.atan2(cursor.y-c.y, cursor.x-c.x);
+    ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(cursor.x,cursor.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.x,c.y,pending.r,pending.startAngle,endAngle,false); ctx.stroke();
+  } else if (pending.type==='transportA'){
+    const a=getPoint(pending.a);
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(cursor.x,cursor.y); ctx.stroke();
+  } else if (pending.type==='transportB'){
+    const a=getPoint(pending.a), b=getPoint(pending.b);
+    const r=dist(a,b);
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cursor.x,cursor.y,r,0,TWO_PI); ctx.stroke();
+  } else if (pending.type==='transportC'){
+    const c=getPoint(pending.center);
+    ctx.beginPath(); ctx.arc(c.x,c.y,pending.r,0,TWO_PI); ctx.stroke();
+    const dx=cursor.x-c.x, dy=cursor.y-c.y;
+    const len=Math.hypot(dx,dy);
+    const ux = len>1e-9 ? dx/len : 1, uy = len>1e-9 ? dy/len : 0;
+    const landing = {x:c.x+ux*pending.r, y:c.y+uy*pending.r};
+    ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(landing.x,landing.y); ctx.stroke();
+    ctx.save();
+    ctx.fillStyle='#8c2f21'; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(landing.x,landing.y,4/view.scale,0,TWO_PI); ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
+}
+
+function renderAll(){
+  renderLayerPanel();
+  renderProps();
+  updateStatus();
+  render();
+}
+
+/* ============================== INTERACTION ============================== */
+let lastMouseWorld = null;
+
+function pointHitTest(worldPt, tolPx){
+  const tol = tolPx/view.scale;
+  let best=null, bestD=tol;
+  for (const p of points){
+    const d=dist(p,worldPt);
+    if (d<bestD){ bestD=d; best={type:'point', id:p.id}; }
+  }
+  return best;
+}
+function objectHitTest(worldPt, tolPx){
+  const tol = tolPx/view.scale;
+  const pHit = pointHitTest(worldPt, tolPx);
+  if (pHit) return pHit;
+  let best=null, bestD=tol;
+  for (const l of lines){
+    const layer=layers.find(x=>x.id===l.layerId); if(layer&&!layer.visible) continue;
+    const p1=getPoint(l.p1), p2=getPoint(l.p2);
+    const d = distToSegment(worldPt,p1,p2);
+    if (d<bestD){ bestD=d; best={type:'line', id:l.id}; }
+  }
+  for (const a of arcs){
+    const layer=layers.find(x=>x.id===a.layerId); if(layer&&!layer.visible) continue;
+    const ang = Math.atan2(worldPt.y-a.cy, worldPt.x-a.cx);
+    if (!isAngleInArc(ang,a)) continue;
+    const d = Math.abs(dist(worldPt,{x:a.cx,y:a.cy})-a.r);
+    if (d<bestD){ bestD=d; best={type:'arc', id:a.id}; }
+  }
+  return best;
+}
+function distToSegment(p,a,b){
+  const abx=b.x-a.x, aby=b.y-a.y;
+  const len2=abx*abx+aby*aby;
+  let t = len2<1e-9 ? 0 : ((p.x-a.x)*abx+(p.y-a.y)*aby)/len2;
+  t = Math.max(0,Math.min(1,t));
+  const cx=a.x+t*abx, cy=a.y+t*aby;
+  return Math.hypot(p.x-cx,p.y-cy);
+}
+
+/* Unified pointer handling: covers mouse, touch and pen.
+   - Single finger/mouse: tap to act (place/select), drag an existing point in
+     Select mode to move it.
+   - Two fingers: pinch to zoom and pan together, like a map app.
+   - Mouse keeps right-drag / Space-drag panning and wheel zoom. */
+const activePointers = new Map(); // pointerId -> screen {x,y}
+let pinchState = null;
+let singleGesture = null;
+const TAP_MOVE_TOL = 10;
+
+function pointerScreenPos(evt){
+  const rect = canvas.getBoundingClientRect();
+  return { x: evt.clientX-rect.left, y: evt.clientY-rect.top };
+}
+
+canvas.addEventListener('pointerdown', (evt)=>{
+  canvas.setPointerCapture(evt.pointerId);
+  activePointers.set(evt.pointerId, pointerScreenPos(evt));
+  lastPointerType = evt.pointerType;
+
+  if (evt.pointerType==='mouse' && (evt.button===2 || spaceDown)){
+    isPanning=true; panStart={x:evt.clientX,y:evt.clientY, ox:view.ox, oy:view.oy};
+    evt.preventDefault(); return;
+  }
+  if (evt.pointerType==='mouse' && evt.button!==0) return;
+
+  if (activePointers.size===2){
+    singleGesture=null; dragPoint=null; hoverSnap=null; erasing=false;
+    const pts=[...activePointers.values()];
+    const dx=pts[0].x-pts[1].x, dy=pts[0].y-pts[1].y;
+    pinchState = {
+      startDist: Math.max(1, Math.hypot(dx,dy)),
+      startScale: view.scale,
+      startMid: {x:(pts[0].x+pts[1].x)/2, y:(pts[0].y+pts[1].y)/2},
+      startOx: view.ox, startOy: view.oy
+    };
+    render();
+    return;
+  }
+  if (activePointers.size>2) return;
+
+  const world = mouseWorld(evt);
+  lastMouseWorld = world;
+
+  if (tool==='eraser'){
+    pushHistory();
+    erasing = true;
+    eraserBlockedFlash = false;
+    eraseAt(world);
+    render();
+    return;
+  }
+
+  const hit = tool==='select' ? pointHitTest(world, evt.pointerType==='touch'?18:12) : null;
+  const hitPoint = hit ? getPoint(hit.id) : null;
+  const hitLocked = hitPoint ? isLockedLayer(hitPoint.layerId) : false;
+  singleGesture = {
+    pointerId: evt.pointerId,
+    startScreen: {x:evt.clientX, y:evt.clientY},
+    moved:false,
+    onPoint: (hitPoint && !hitLocked) ? hitPoint : null,
+    lockedAttempt: hitLocked
+  };
+  hoverSnap = (tool==='select' && !pendingExtend) ? null : findSnap(world);
+  render();
+});
+
+canvas.addEventListener('pointermove', (evt)=>{
+  if (activePointers.has(evt.pointerId)) activePointers.set(evt.pointerId, pointerScreenPos(evt));
+
+  if (pinchState && activePointers.size===2){
+    const pts=[...activePointers.values()];
+    const dx=pts[0].x-pts[1].x, dy=pts[0].y-pts[1].y;
+    const d = Math.hypot(dx,dy);
+    const mid = {x:(pts[0].x+pts[1].x)/2, y:(pts[0].y+pts[1].y)/2};
+    const newScale = Math.min(6, Math.max(0.15, pinchState.startScale*(d/pinchState.startDist)));
+    const worldAtStartMid = {
+      x:(pinchState.startMid.x-pinchState.startOx)/pinchState.startScale,
+      y:(pinchState.startMid.y-pinchState.startOy)/pinchState.startScale
+    };
+    view.scale = newScale;
+    view.ox = mid.x - worldAtStartMid.x*newScale;
+    view.oy = mid.y - worldAtStartMid.y*newScale;
+    render();
+    return;
+  }
+
+  const world = mouseWorld(evt);
+  lastMouseWorld = world;
+
+  if (erasing){
+    eraseAt(world);
+    eraserHover = objectHitTest(world, lastPointerType==='touch'?18:12);
+    render();
+    return;
+  }
+
+  if (isPanning){
+    view.ox = panStart.ox + (evt.clientX-panStart.x);
+    view.oy = panStart.oy + (evt.clientY-panStart.y);
+    render(); return;
+  }
+
+  if (singleGesture && singleGesture.pointerId===evt.pointerId){
+    const dx=evt.clientX-singleGesture.startScreen.x, dy=evt.clientY-singleGesture.startScreen.y;
+    if (Math.hypot(dx,dy) > TAP_MOVE_TOL) singleGesture.moved=true;
+
+    if (tool==='select' && singleGesture.onPoint && singleGesture.moved){
+      if (!dragPoint){ dragPoint=singleGesture.onPoint; pushHistory(); }
+      const snap = findSnap(world);
+      const loc = (snap && snap.existing && snap.existing.id!==dragPoint.id) ? snap : {x:world.x,y:world.y};
+      dragPoint.x=loc.x; dragPoint.y=loc.y;
+      render();
+      return;
+    }
+  }
+
+  if (tool==='eraser'){
+    eraserHover = objectHitTest(world, lastPointerType==='touch'?18:12);
+    hoverSnap = null;
+    render();
+    return;
+  }
+
+  if (tool==='select' && !pendingExtend){
+    hoverSnap=null;
+  } else {
+    hoverSnap = findSnap(world);
+  }
+  render();
+});
+
+canvas.addEventListener('pointerup', (evt)=>{
+  activePointers.delete(evt.pointerId);
+
+  if (erasing){ erasing=false; renderAll(); return; }
+
+  if (pinchState){
+    if (activePointers.size<2) pinchState=null;
+    render();
+    return;
+  }
+  if (isPanning){ isPanning=false; return; }
+
+  if (singleGesture && singleGesture.pointerId===evt.pointerId){
+    const wasMoved = singleGesture.moved;
+    const lockedAttempt = singleGesture.lockedAttempt;
+    if (dragPoint){ dragPoint=null; singleGesture=null; renderAll(); return; }
+    if (!wasMoved) handleClick(mouseWorld(evt));
+    else if (lockedAttempt) flashLockedNotice();
+    singleGesture=null;
+    if (tool!=='select') hoverSnap=null;
+    render();
+  }
+});
+
+canvas.addEventListener('pointercancel', (evt)=>{
+  activePointers.delete(evt.pointerId);
+  erasing=false;
+  if (activePointers.size<2) pinchState=null;
+  if (singleGesture && singleGesture.pointerId===evt.pointerId){ singleGesture=null; dragPoint=null; }
+});
+
+canvas.addEventListener('pointerleave', (evt)=>{
+  if (evt.pointerType==='mouse'){ hoverSnap=null; eraserHover=null; render(); }
+});
+
+canvas.addEventListener('contextmenu', e=>e.preventDefault());
+
+canvas.addEventListener('wheel', (evt)=>{
+  evt.preventDefault();
+  const rect = canvas.getBoundingClientRect();
+  const mx = evt.clientX-rect.left, my = evt.clientY-rect.top;
+  const before = screenToWorld({x:mx,y:my});
+  const factor = Math.exp(-evt.deltaY*0.001);
+  view.scale = Math.min(6, Math.max(0.15, view.scale*factor));
+  const after = worldToScreen(before);
+  view.ox += mx-after.x; view.oy += my-after.y;
+  render();
+}, {passive:false});
+
+window.addEventListener('keydown', (evt)=>{
+  if (evt.code==='Space'){ spaceDown=true; canvas.style.cursor='grab'; }
+  if (evt.key==='Escape'){ pending=null; pendingExtend=null; checkPending=null; closeHelp(); render(); updateStatus(); }
+  if ((evt.key==='Delete'||evt.key==='Backspace') && selection){
+    if (document.activeElement && document.activeElement.tagName==='INPUT') return;
+    deleteSelection();
+  }
+  if ((evt.metaKey||evt.ctrlKey) && evt.key==='z'){ evt.preventDefault(); evt.shiftKey?redo():undo(); }
+});
+window.addEventListener('keyup', (evt)=>{
+  if (evt.code==='Space'){ spaceDown=false; canvas.style.cursor='crosshair'; }
+});
+
+function handleClick(world){
+  if (tool==='select'){
+    if (pendingExtend){
+      const l = lines.find(x=>x.id===pendingExtend.lineId);
+      if (!l || isLockedLayer(l.layerId)){ flashLockedNotice(); pendingExtend=null; renderAll(); return; }
+      pushHistory();
+      const pt = resolveExtendPoint(pendingExtend.lineId, world);
+      if (pt) applyExtend(pendingExtend.lineId, pt);
+      pendingExtend=null;
+      renderAll();
+      return;
+    }
+    const hit = objectHitTest(world, lastPointerType==='touch'?18:12);
+    selection = hit;
+    renderAll();
+    return;
+  }
+
+  if (tool==='check'){
+    handleCheckClick(world);
+    return;
+  }
+
+  pushHistory();
+  const pt = resolvePoint(world);
+
+  if (tool==='point'){
+    pending=null;
+  }
+  else if (tool==='line'){
+    if (!pending) pending = {type:'line', p1:pt.id};
+    else {
+      if (pending.p1!==pt.id) lines.push({id:uid('line'), p1:pending.p1, p2:pt.id, layerId:activeLayerId});
+      pending=null;
+    }
+  }
+  else if (tool==='compass'){
+    if (compassSub==='circle'){
+      if (!pending){
+        if (compassMode==='rigid' && savedRadius!=null){
+          // rigid compass: span is already set, so one click stamps the circle
+          arcs.push({id:uid('arc'), cx:pt.x, cy:pt.y, r:savedRadius, startAngle:0, endAngle:TWO_PI, full:true, anticlockwise:false, layerId:activeLayerId});
+        } else {
+          pending={type:'circleCenter', center:pt.id};
+        }
+      } else {
+        const c=getPoint(pending.center);
+        const r=dist(c,pt);
+        if (r>1e-6){
+          arcs.push({id:uid('arc'), cx:c.x, cy:c.y, r, startAngle:0, endAngle:TWO_PI, full:true, anticlockwise:false, layerId:activeLayerId});
+          savedRadius = compassMode==='rigid' ? r : null;
+        }
+        pending=null;
+      }
+    } else {
+      if (!pending) pending={type:'arcCenter', center:pt.id};
+      else if (pending.type==='arcCenter'){
+        const c=getPoint(pending.center);
+        const r=dist(c,pt);
+        if (r>1e-6){
+          const startAngle=Math.atan2(pt.y-c.y, pt.x-c.x);
+          pending={type:'arcStart', center:pending.center, r, startAngle};
+        } else pending=null;
+      } else if (pending.type==='arcStart'){
+        const c=getPoint(pending.center);
+        const endAngle=Math.atan2(pt.y-c.y, pt.x-c.x);
+        arcs.push({id:uid('arc'), cx:c.x, cy:c.y, r:pending.r, startAngle:pending.startAngle, endAngle, full:false, anticlockwise:false, layerId:activeLayerId});
+        savedRadius = compassMode==='rigid' ? pending.r : null;
+        pending=null;
+      }
+    }
+  }
+  else if (tool==='transport'){
+    if (!pending) pending={type:'transportA', a:pt.id};
+    else if (pending.type==='transportA'){
+      if (pt.id!==pending.a) pending={type:'transportB', a:pending.a, b:pt.id};
+      else pending=null;
+    } else if (pending.type==='transportB'){
+      const A=getPoint(pending.a), B=getPoint(pending.b);
+      const r=dist(A,B);
+      if (r>1e-6) pending={type:'transportC', a:pending.a, b:pending.b, r, center:pt.id};
+      else pending=null;
+    } else if (pending.type==='transportC'){
+      const c=getPoint(pending.center);
+      const dx=pt.x-c.x, dy=pt.y-c.y;
+      const len=Math.hypot(dx,dy);
+      const ux = len>1e-9 ? dx/len : 1;
+      const uy = len>1e-9 ? dy/len : 0;
+      arcs.push({id:uid('arc'), cx:c.x, cy:c.y, r:pending.r, startAngle:0, endAngle:TWO_PI, full:true, anticlockwise:false, layerId:activeLayerId});
+      points.push({id:uid('pt'), x:c.x+ux*pending.r, y:c.y+uy*pending.r, layerId:activeLayerId});
+      savedRadius=pending.r;
+      pending=null;
+    }
+  }
+
+  renderAll();
+}
+
+function flashLayerRow(layerId){
+  const row = document.querySelector(`.layer-row[data-layer-id="${layerId}"]`);
+  if (!row) return;
+  row.classList.add('flash');
+  setTimeout(()=>row.classList.remove('flash'), 550);
+}
+
+function selectedObjectLayerId(){
+  if (!selection) return null;
+  if (selection.type==='point'){ const p=getPoint(selection.id); return p?p.layerId:null; }
+  if (selection.type==='line'){ const l=lines.find(x=>x.id===selection.id); return l?l.layerId:null; }
+  if (selection.type==='arc'){ const a=arcs.find(x=>x.id===selection.id); return a?a.layerId:null; }
+  return null;
+}
+
+function reassignSelectionLayer(layerId){
+  if (!selection) return;
+  if (isLockedLayer(selectedObjectLayerId())){ flashLockedNotice(); return; }
+  if (selection.type==='point'){
+    const p=getPoint(selection.id); if (p) p.layerId=layerId;
+  } else if (selection.type==='line'){
+    const l=lines.find(x=>x.id===selection.id); if (l) l.layerId=layerId;
+  } else if (selection.type==='arc'){
+    const a=arcs.find(x=>x.id===selection.id); if (a) a.layerId=layerId;
+  }
+}
+
+function deleteSelection(){
+  if (!selection) return;
+  if (!canDeleteObject(selection.type, selection.id)){ flashLockedNotice(); return; }
+  pushHistory();
+  performDelete(selection.type, selection.id);
+  selection=null;
+  renderAll();
+}
+
+/* ---- shared, lock-aware deletion used by Select+Delete and the Eraser tool ---- */
+function canDeleteObject(type, id){
+  if (type==='point'){
+    const p=getPoint(id);
+    if (!p) return false;
+    if (isLockedLayer(p.layerId)) return false;
+    // don't let deleting a point silently take a locked line down with it
+    for (const l of lines) if ((l.p1===id||l.p2===id) && isLockedLayer(l.layerId)) return false;
+    return true;
+  }
+  if (type==='line'){ const l=lines.find(x=>x.id===id); return l ? !isLockedLayer(l.layerId) : false; }
+  if (type==='arc'){ const a=arcs.find(x=>x.id===id); return a ? !isLockedLayer(a.layerId) : false; }
+  return false;
+}
+function performDelete(type, id){
+  if (type==='point'){
+    for (let i=lines.length-1;i>=0;i--) if (lines[i].p1===id||lines[i].p2===id) lines.splice(i,1);
+    const idx=points.findIndex(p=>p.id===id);
+    if (idx>=0) points.splice(idx,1);
+  } else if (type==='line'){
+    const idx=lines.findIndex(l=>l.id===id); if (idx>=0) lines.splice(idx,1);
+  } else if (type==='arc'){
+    const idx=arcs.findIndex(a=>a.id===id); if (idx>=0) arcs.splice(idx,1);
+  }
+}
+
+let eraserHover = null;      // {type,id} currently under the cursor, for highlight
+let erasing = false;         // true while an erase drag is in progress
+let eraserBlockedFlash = false;
+function eraseAt(world){
+  const hit = objectHitTest(world, lastPointerType==='touch'?18:12);
+  if (!hit) return;
+  if (!canDeleteObject(hit.type, hit.id)){
+    if (!eraserBlockedFlash){ flashLockedNotice(); eraserBlockedFlash=true; }
+    return;
+  }
+  performDelete(hit.type, hit.id);
+  if (selection && selection.type===hit.type && selection.id===hit.id) selection=null;
+}
+
+/* ============================== TOOLBAR ============================== */
+const toolbarEl = document.getElementById('toolbar');
+function buildToolbar(){
+  toolbarEl.innerHTML='';
+  TOOLS.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.className='tool-btn'+(tool===t.id?' active':'');
+    btn.innerHTML=ICONS[t.id];
+    btn.title=t.name;
+    btn.addEventListener('click', ()=>{ tool=t.id; pending=null; pendingExtend=null; selection=null; checkPending=null; erasing=false; eraserHover=null; hideCheckBanner(); buildToolbar(); renderAll(); });
+    toolbarEl.appendChild(btn);
+    const lbl=document.createElement('div');
+    lbl.className='tool-label'; lbl.textContent=t.name;
+    toolbarEl.appendChild(lbl);
+  });
+
+  if (tool==='compass'){
+    toolbarEl.appendChild(sep());
+    toolbarEl.appendChild(smallToggle('Circle','circle', compassSub, v=>{compassSub=v; pending=null; buildToolbar(); renderAll();}));
+    toolbarEl.appendChild(smallToggle('Arc','arc', compassSub, v=>{compassSub=v; pending=null; buildToolbar(); renderAll();}));
+    toolbarEl.appendChild(sep());
+    toolbarEl.appendChild(smallToggle('Collaps.','collapsing', compassMode, v=>{compassMode=v; if(v==='collapsing') savedRadius=null; pending=null; buildToolbar(); renderAll();}));
+    toolbarEl.appendChild(smallToggle('Rigid','rigid', compassMode, v=>{compassMode=v; pending=null; buildToolbar(); renderAll();}));
+    if (compassMode==='rigid' && savedRadius!=null){
+      toolbarEl.appendChild(sep());
+      const resetBtn=document.createElement('button');
+      resetBtn.className='tool-btn';
+      resetBtn.style.width='44px'; resetBtn.style.height='22px'; resetBtn.style.fontSize='8px';
+      resetBtn.textContent='Reset span';
+      resetBtn.title='Forget the saved radius';
+      resetBtn.addEventListener('click', ()=>{ savedRadius=null; pending=null; buildToolbar(); renderAll(); });
+      toolbarEl.appendChild(resetBtn);
+    }
+  }
+
+  if (tool==='check'){
+    toolbarEl.appendChild(sep());
+    toolbarEl.appendChild(smallToggle('Lines','lines', checkMode, v=>{checkMode=v; checkPending=null; hideCheckBanner(); buildToolbar(); renderAll();}));
+    toolbarEl.appendChild(smallToggle('Circles','circles', checkMode, v=>{checkMode=v; checkPending=null; hideCheckBanner(); buildToolbar(); renderAll();}));
+    toolbarEl.appendChild(smallToggle('Angles','angles', checkMode, v=>{checkMode=v; checkPending=null; hideCheckBanner(); buildToolbar(); renderAll();}));
+  }
+}
+function sep(){ const d=document.createElement('div'); d.className='tool-sep'; return d; }
+function smallToggle(label, value, current, onSet){
+  const b=document.createElement('button');
+  b.className='tool-btn'+(current===value?' active':'');
+  b.style.width='44px'; b.style.height='24px'; b.style.fontSize='9px'; b.style.letterSpacing='.03em';
+  b.textContent=label;
+  b.addEventListener('click', ()=>onSet(value));
+  return b;
+}
+
+/* ============================== STATUS / READOUT ============================== */
+let lockNoticeTimer = null;
+function flashLockedNotice(){
+  const instr = document.getElementById('instruction');
+  const mobileInstr = document.getElementById('mobileInstruction');
+  const msg = '🔒 That layer is locked — unlock it to edit or delete its contents.';
+  instr.textContent = msg;
+  if (mobileInstr) mobileInstr.textContent = msg;
+  clearTimeout(lockNoticeTimer);
+  lockNoticeTimer = setTimeout(updateStatus, 1800);
+}
+
+function updateStatus(){
+  const instr = document.getElementById('instruction');
+  const modeBadge = document.getElementById('modeBadge');
+  const radiusBadge = document.getElementById('radiusBadge');
+  const readout = document.getElementById('readout');
+
+  const toolName = TOOLS.find(t=>t.id===tool).name;
+  readout.innerHTML = `<div><span>tool</span> ${toolName}${tool==='compass'?' · '+compassSub:''}</div><div><span>compass</span> ${compassMode}</div>`;
+
+  modeBadge.textContent = compassMode;
+  modeBadge.className = 'badge'+(compassMode==='rigid'?' rigid':'');
+
+  if (savedRadius!=null){
+    radiusBadge.style.display='inline-block';
+    radiusBadge.textContent = 'radius '+savedRadius.toFixed(1);
+  } else {
+    radiusBadge.style.display='none';
+  }
+
+  let msg='';
+  if (tool==='select'){
+    msg = pendingExtend
+      ? "Click where the line should reach — it stays on the line's own direction, so off-axis clicks land on the nearest point along it."
+      : 'Click to select · drag a point to move it · Delete to remove.';
+  }
+  else if (tool==='eraser') msg='Click an object to delete it, or drag across several to erase them all. Locked layers are skipped.';
+  else if (tool==='point') msg='Click to place a point. It will snap to nearby points or intersections.';
+  else if (tool==='line'){
+    msg = pending ? 'Click the second point to complete the line.' : 'Click the first point of the line.';
+  } else if (tool==='compass'){
+    if (compassSub==='circle'){
+      if (compassMode==='rigid' && savedRadius!=null && !pending) msg='Click a centre to stamp a circle with the saved span ('+savedRadius.toFixed(1)+'). Use "Reset span" to measure a new radius.';
+      else msg = pending ? 'Click to set the radius and draw the circle.' : 'Click to place the centre of the compass.';
+    } else {
+      if (!pending) msg='Click to place the centre.';
+      else if (pending.type==='arcCenter') msg='Click the point that sets the radius and start angle.';
+      else msg='Click to set where the arc ends.';
+    }
+  } else if (tool==='transport'){
+    if (!pending) msg='Click the first point of the length you want to copy.';
+    else if (pending.type==='transportA') msg='Click the second point — this sets the length to transport.';
+    else if (pending.type==='transportB') msg='Click the centre where that length should be transported to.';
+    else msg='Click to set the direction — a point will be placed exactly that length from the centre.';
+  } else if (tool==='check'){
+    if (checkMode==='lines') msg = checkPending ? 'Click a second line to compare.' : 'Click a line to compare.';
+    else if (checkMode==='circles') msg = checkPending ? 'Click a second circle or arc to compare.' : 'Click a circle or arc to compare.';
+    else {
+      const stage = checkPending ? checkPending.stage : null;
+      if (!stage) msg='Click the vertex of the first angle.';
+      else if (stage==='need_a1') msg='Click a point on the first arm of the angle.';
+      else if (stage==='need_b1') msg='Click a point on the second arm of the angle.';
+      else if (stage==='need_v2') msg='Click the vertex of the second angle.';
+      else if (stage==='need_a2') msg='Click a point on the first arm of the second angle.';
+      else msg='Click a point on the second arm of the second angle.';
+    }
+  }
+  instr.textContent = msg;
+  const mobileInstr = document.getElementById('mobileInstruction');
+  if (mobileInstr) mobileInstr.textContent = msg;
+}
+
+/* ============================== LAYERS PANEL ============================== */
+function renderLayerPanel(){
+  const list = document.getElementById('layerList');
+  list.innerHTML='';
+  layers.forEach(layer=>{
+    const row=document.createElement('div');
+    row.className='layer-row'+(layer.id===activeLayerId?' active':'');
+    row.dataset.layerId = layer.id;
+
+    const eye=document.createElement('button');
+    eye.className='eye'+(layer.visible?'':' hidden');
+    eye.innerHTML = layer.visible?ICONS.eyeOpen:ICONS.eyeShut;
+    eye.title='Toggle visibility';
+    eye.addEventListener('click', (e)=>{ e.stopPropagation(); layer.visible=!layer.visible; renderAll(); });
+    row.appendChild(eye);
+
+    const lock=document.createElement('button');
+    lock.className='eye'+(layer.locked?' locked':'');
+    lock.innerHTML = layer.locked?ICONS.lockClosed:ICONS.lockOpen;
+    lock.title = layer.locked ? 'Unlock layer' : 'Lock layer (protects its items from editing or clearing)';
+    lock.addEventListener('click', (e)=>{ e.stopPropagation(); layer.locked=!layer.locked; renderAll(); });
+    row.appendChild(lock);
+
+    const swatch=document.createElement('input');
+    swatch.type='color'; swatch.className='swatch'; swatch.value=layer.color;
+    swatch.addEventListener('input', ()=>{ layer.color=swatch.value; render(); });
+    row.appendChild(swatch);
+
+    const nameInput=document.createElement('input');
+    nameInput.type='text'; nameInput.value=layer.name;
+    nameInput.addEventListener('change', ()=>{ layer.name=nameInput.value||layer.name; });
+    row.appendChild(nameInput);
+
+    const dash=document.createElement('select');
+    dash.className='dash-select';
+    dash.title='Line style';
+    const DASH_LABELS = {solid:'Solid', dashed:'Dashed', dotted:'Dotted'};
+    ['solid','dashed','dotted'].forEach(opt=>{
+      const o=document.createElement('option'); o.value=opt; o.textContent=DASH_LABELS[opt];
+      if (layer.dash===opt) o.selected=true;
+      dash.appendChild(o);
+    });
+    dash.addEventListener('change', ()=>{ layer.dash=dash.value; render(); });
+    row.appendChild(dash);
+
+    const del=document.createElement('button');
+    del.className='layer-del'; del.textContent='✕'; del.title = layer.locked ? 'Unlock this layer to delete it' : 'Delete layer';
+    if (layer.locked){ del.style.opacity=0.35; del.style.cursor='not-allowed'; }
+    del.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      if (layer.locked || layers.length===1) return;
+      pushHistory();
+      const idx=layers.findIndex(l=>l.id===layer.id);
+      layers.splice(idx,1);
+      const fallback=layers[0].id;
+      points.forEach(p=>{ if(p.layerId===layer.id) p.layerId=fallback; });
+      lines.forEach(l=>{ if(l.layerId===layer.id) l.layerId=fallback; });
+      arcs.forEach(a=>{ if(a.layerId===layer.id) a.layerId=fallback; });
+      if (activeLayerId===layer.id) activeLayerId=fallback;
+      renderAll();
+    });
+    row.appendChild(del);
+
+    row.addEventListener('click', ()=>{
+      if (selection){
+        pushHistory();
+        reassignSelectionLayer(layer.id);
+        renderLayerPanel();
+        renderProps();
+        render();
+        flashLayerRow(layer.id);
+      } else if (!layer.locked){
+        activeLayerId=layer.id;
+        renderLayerPanel();
+      } else {
+        flashLayerRow(layer.id);
+      }
+    });
+    list.appendChild(row);
+  });
+}
+
+document.getElementById('addLayerBtn').addEventListener('click', ()=>{
+  pushHistory();
+  const color = PALETTE[paletteIdx % PALETTE.length]; paletteIdx++;
+  const layer = { id:uid('layer'), name:'Layer '+layers.length, color, dash:'solid', visible:true, locked:false };
+  layers.push(layer);
+  activeLayerId=layer.id;
+  renderLayerPanel();
+});
+
+/* ============================== PROPERTIES PANEL ============================== */
+function renderProps(){
+  const body=document.getElementById('propsBody');
+  if (!selection){ body.innerHTML='<div class="props-empty">Nothing selected.</div>'; return; }
+  if (selection.type==='point'){
+    const p=getPoint(selection.id);
+    if (!p){ selection=null; return renderProps(); }
+    body.innerHTML = `<div class="props-line"><span>type</span> point</div>
+      <div class="props-line"><span>x</span> ${p.x.toFixed(1)}</div>
+      <div class="props-line"><span>y</span> ${p.y.toFixed(1)}</div>
+      <div class="props-line"><span>layer</span> ${layerNameOf(p.layerId)}</div>`;
+  } else if (selection.type==='line'){
+    const l=lines.find(x=>x.id===selection.id);
+    if (!l){ selection=null; return renderProps(); }
+    const p1=getPoint(l.p1), p2=getPoint(l.p2);
+    body.innerHTML = `<div class="props-line"><span>type</span> line</div>
+      <div class="props-line"><span>length</span> ${dist(p1,p2).toFixed(2)}</div>
+      <div class="props-line"><span>layer</span> ${layerNameOf(l.layerId)}</div>`;
+  } else if (selection.type==='arc'){
+    const a=arcs.find(x=>x.id===selection.id);
+    if (!a){ selection=null; return renderProps(); }
+    body.innerHTML = `<div class="props-line"><span>type</span> ${a.full?'circle':'arc'}</div>
+      <div class="props-line"><span>radius</span> ${a.r.toFixed(2)}</div>
+      ${a.full?'':`<div class="props-line"><span>sweep</span> ${(Math.abs(a.endAngle-a.startAngle)*180/Math.PI).toFixed(1)}°</div>`}
+      <div class="props-line"><span>layer</span> ${layerNameOf(a.layerId)}</div>`;
+  }
+  const locked = isLockedLayer(selectedObjectLayerId());
+  body.innerHTML += locked
+    ? `<div class="props-empty" style="margin-top:8px; color:var(--wax-bright);">🔒 This layer is locked — unlock it to edit or delete.</div>`
+    : `<div class="props-empty" style="margin-top:8px;">Click a layer above to move this here.</div>`;
+  document.getElementById('extendSelBtn').style.display = (selection.type==='line' && !locked) ? 'inline-block' : 'none';
+  const delBtn = document.getElementById('deleteSelBtn');
+  delBtn.disabled = locked;
+  delBtn.style.opacity = locked ? 0.4 : 1;
+  delBtn.style.cursor = locked ? 'not-allowed' : 'pointer';
+}
+function layerNameOf(id){
+  const l=layers.find(x=>x.id===id);
+  return l ? l.name : '—';
+}
+
+document.getElementById('deleteSelBtn').addEventListener('click', deleteSelection);
+
+/* ---- extend / trim an existing line, straightedge-style ---- */
+let pendingExtend = null; // {lineId}
+document.getElementById('extendSelBtn').addEventListener('click', ()=>{
+  if (!selection || selection.type!=='line') return;
+  const l = lines.find(x=>x.id===selection.id);
+  if (l && isLockedLayer(l.layerId)){ flashLockedNotice(); return; }
+  pendingExtend = { lineId: selection.id };
+  updateStatus();
+  render();
+});
+
+function resolveExtendPoint(lineId, world){
+  const l = lines.find(x=>x.id===lineId);
+  if (!l) return null;
+  const p1=getPoint(l.p1), p2=getPoint(l.p2);
+  const dirx=p2.x-p1.x, diry=p2.y-p1.y;
+  const len2 = dirx*dirx+diry*diry;
+  if (len2<1e-9) return null;
+
+  // Snap to nearby points/intersections as usual, but only *reuse* an
+  // existing point if it's actually (near enough to) already on this
+  // line's own direction — otherwise the line would kink off-axis.
+  const snap = findSnap(world);
+  const candidate = snap ? {x:snap.x, y:snap.y, existing:snap.existing} : {x:world.x, y:world.y, existing:null};
+
+  const t = ((candidate.x-p1.x)*dirx + (candidate.y-p1.y)*diry)/len2;
+  const projX = p1.x + t*dirx, projY = p1.y + t*diry;
+  const onLineTol = 8/view.scale;
+
+  if (candidate.existing && Math.hypot(candidate.x-projX, candidate.y-projY) <= onLineTol){
+    return candidate.existing;
+  }
+  const p = { id: uid('pt'), x: projX, y: projY, layerId: l.layerId };
+  points.push(p);
+  return p;
+}
+
+function applyExtend(lineId, targetPoint){
+  const l = lines.find(x=>x.id===lineId);
+  if (!l) return;
+  if (isLockedLayer(l.layerId)){ flashLockedNotice(); return; }
+  const p1=getPoint(l.p1), p2=getPoint(l.p2);
+  const dirx=p2.x-p1.x, diry=p2.y-p1.y;
+  const len2 = dirx*dirx+diry*diry;
+  if (len2<1e-9) return;
+  // targetPoint is already guaranteed collinear by resolveExtendPoint —
+  // this just decides which end of the segment it becomes.
+  const t = ((targetPoint.x-p1.x)*dirx + (targetPoint.y-p1.y)*diry)/len2;
+  if (t <= 0.5) l.p1 = targetPoint.id; else l.p2 = targetPoint.id;
+}
+
+/* ---- equivalence checking: lines, circles/arcs, and angles ---- */
+function handleCheckClick(world){
+  if (checkMode==='lines' || checkMode==='circles'){
+    const wantType = checkMode==='lines' ? 'line' : 'arc';
+    const hit = objectHitTest(world, lastPointerType==='touch'?18:12);
+    if (!hit || hit.type!==wantType){ return; }
+
+    if (!checkPending){
+      checkPending = { picks:[hit.id] };
+      hideCheckBanner();
+    } else if (checkPending.picks[0]===hit.id){
+      checkPending = null; // clicking the same object again cancels
+    } else {
+      const idA=checkPending.picks[0], idB=hit.id;
+      if (checkMode==='lines'){
+        const a=lines.find(x=>x.id===idA), b=lines.find(x=>x.id===idB);
+        const la=dist(getPoint(a.p1),getPoint(a.p2)), lb=dist(getPoint(b.p1),getPoint(b.p2));
+        const ok = Math.abs(la-lb) < EPS_LENGTH;
+        showCheckResult(ok, `Line (${la.toFixed(2)})`, `Line (${lb.toFixed(2)})`, Math.abs(la-lb));
+      } else {
+        const a=arcs.find(x=>x.id===idA), b=arcs.find(x=>x.id===idB);
+        const ok = Math.abs(a.r-b.r) < EPS_LENGTH;
+        showCheckResult(ok, `${a.full?'Circle':'Arc'} r=${a.r.toFixed(2)}`, `${b.full?'Circle':'Arc'} r=${b.r.toFixed(2)}`, Math.abs(a.r-b.r));
+      }
+      checkPending = null;
+    }
+    render();
+    return;
+  }
+
+  // angles: vertex, arm, arm — twice
+  const hit = pointHitTest(world, lastPointerType==='touch'?18:12);
+  if (!hit) return;
+  const p = getPoint(hit.id);
+
+  if (!checkPending) { checkPending = { stage:'need_a1', v1:p.id }; hideCheckBanner(); }
+  else if (checkPending.stage==='need_a1') checkPending = { ...checkPending, stage:'need_b1', a1:p.id };
+  else if (checkPending.stage==='need_b1'){
+    const angle1 = angleAt(getPoint(checkPending.v1), getPoint(checkPending.a1), p);
+    checkPending = { ...checkPending, stage:'need_v2', b1:p.id, angle1 };
+    hideCheckBanner();
+  }
+  else if (checkPending.stage==='need_v2') checkPending = { ...checkPending, stage:'need_a2', v2:p.id };
+  else if (checkPending.stage==='need_a2') checkPending = { ...checkPending, stage:'need_b2', a2:p.id };
+  else if (checkPending.stage==='need_b2'){
+    const angle2 = angleAt(getPoint(checkPending.v2), getPoint(checkPending.a2), p);
+    const ok = Math.abs(checkPending.angle1-angle2) < EPS_ANGLE;
+    showCheckResult(ok, `∠ ${checkPending.angle1.toFixed(1)}°`, `∠ ${angle2.toFixed(1)}°`, Math.abs(checkPending.angle1-angle2));
+    checkPending = null;
+  }
+  render();
+}
+
+function showCheckResult(ok, labelA, labelB, delta){
+  checkResult = { ok, labelA, labelB, delta };
+  const el = document.getElementById('checkBanner');
+  el.className = 'check-banner ' + (ok ? 'equal' : 'notequal');
+  el.style.display = 'flex';
+  el.innerHTML = `<span>${labelA} vs ${labelB}</span><span class="check-verdict">${ok ? '≅ Equal' : '≠ Not equal'}</span><span style="color:var(--panel-text-dim)">(Δ ${delta.toFixed(2)})</span>`;
+}
+function hideCheckBanner(){
+  checkResult = null;
+  const el = document.getElementById('checkBanner');
+  if (el){ el.style.display='none'; }
+}
+
+/* ============================== TOP-LEVEL CONTROLS ============================== */
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.getElementById('redoBtn').addEventListener('click', redo);
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  const includeLocked = document.getElementById('clearLockedChk').checked;
+  const hasLocked = layers.some(l=>l.locked);
+  const msg = (includeLocked || !hasLocked)
+    ? 'Clear the whole canvas? This cannot be undone once you close the app.'
+    : 'Clear all unlocked layers? Locked layers will be kept. This cannot be undone once you close the app.';
+  if (!confirm(msg)) return;
+  pushHistory();
+
+  if (includeLocked){
+    points.length=0; lines.length=0; arcs.length=0;
+  } else {
+    const lockedIds = new Set(layers.filter(l=>l.locked).map(l=>l.id));
+    // keep any line/arc on a locked layer, and any point still needed by a kept line
+    const keptLines = lines.filter(l=>lockedIds.has(l.layerId));
+    const neededPointIds = new Set();
+    keptLines.forEach(l=>{ neededPointIds.add(l.p1); neededPointIds.add(l.p2); });
+
+    for (let i=points.length-1;i>=0;i--){
+      const p=points[i];
+      if (!lockedIds.has(p.layerId) && !neededPointIds.has(p.id)) points.splice(i,1);
+    }
+    for (let i=lines.length-1;i>=0;i--) if (!lockedIds.has(lines[i].layerId)) lines.splice(i,1);
+    for (let i=arcs.length-1;i>=0;i--) if (!lockedIds.has(arcs[i].layerId)) arcs.splice(i,1);
+  }
+
+  selection=null; pending=null; pendingExtend=null; checkPending=null; hideCheckBanner(); savedRadius=null;
+  renderAll();
+});
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const link=document.createElement('a');
+  link.download='euclids-compass.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+});
+
+/* ============================== MOBILE DRAWER ============================== */
+const sidebarEl = document.getElementById('sidebar');
+const backdropEl = document.getElementById('backdrop');
+function openSidebar(){ sidebarEl.classList.add('open'); backdropEl.classList.add('open'); }
+function closeSidebar(){ sidebarEl.classList.remove('open'); backdropEl.classList.remove('open'); }
+document.getElementById('menuBtn').addEventListener('click', openSidebar);
+document.getElementById('sidebarClose').addEventListener('click', closeSidebar);
+backdropEl.addEventListener('click', closeSidebar);
+
+/* ============================== HELP MODAL ============================== */
+const helpModalEl = document.getElementById('helpModal');
+const helpBackdropEl = document.getElementById('helpBackdrop');
+function openHelp(){ helpModalEl.classList.add('open'); helpBackdropEl.classList.add('open'); }
+function closeHelp(){ helpModalEl.classList.remove('open'); helpBackdropEl.classList.remove('open'); }
+document.getElementById('helpBtn').addEventListener('click', openHelp);
+document.getElementById('helpClose').addEventListener('click', closeHelp);
+helpBackdropEl.addEventListener('click', closeHelp);
+
+/* ============================== INIT ============================== */
+function syncVersionDisplays(){
+  document.querySelectorAll('[data-version-slot]').forEach(el=>{ el.textContent = 'v'+APP_VERSION; });
+  const metaVer = document.querySelector('meta[name="application-version"]');
+  if (metaVer) metaVer.setAttribute('content', APP_VERSION);
+}
+syncVersionDisplays();
+buildToolbar();
+resizeCanvas();
+renderAll();
+
+})();
+</script>
+</body>
+</html>

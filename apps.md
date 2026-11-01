@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/euclids-compass/euclids-compass-screenshot.png' | relative_url }}" alt="Euclid's Compass overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Geometry</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/euclids_compass.html' | relative_url }}">Euclid's Compass</a></h2>
+    <p>An interactive straightedge-and-compass construction canvas with collapsing and rigid compass modes, layers, length transport, equality checks, and touch support, packaged as a single-file HTML app.</p>
+    <p><a href="{{ '/portfolio/euclids-compass/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/green-olive/green-olive-screenshot.png' | relative_url }}" alt="Green Olive GPS simulator overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
