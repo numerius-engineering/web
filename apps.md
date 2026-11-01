@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/gift-giver/gift-giver-screenshot.png' | relative_url }}" alt="Gift Giver overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Holiday utility</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/gift_giver.html' | relative_url }}">Gift Giver</a></h2>
+    <p>A festive Secret Santa gift-exchange generator that shuffles a list of names into a single random circle of giving, so everyone gives once and receives once, with one-click copy of the results.</p>
+    <p><a href="{{ '/portfolio/gift-giver/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/py-whole/py-whole-logo.png' | relative_url }}" alt="Py-Whole overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
