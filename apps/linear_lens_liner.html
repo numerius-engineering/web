@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Linear Lens Liner</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2048%2048%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cline%20x1%3D%222%22%20y1%3D%2224%22%20x2%3D%2246%22%20y2%3D%2224%22%20stroke%3D%22%23aeb3ba%22%20stroke-width%3D%221.2%22%20stroke-dasharray%3D%222%202%22/%3E%3Cpath%20d%3D%22M24%206%20C34%206%2034%2042%2024%2042%20C14%2042%2014%206%2024%206%20Z%22%20fill%3D%22%23c9d8ec%22%20stroke%3D%22%233767a6%22%20stroke-width%3D%221.8%22/%3E%3Cpath%20d%3D%22M3%2012%20L24%2015%20L44%2032%22%20fill%3D%22none%22%20stroke%3D%22%2326292e%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Cpath%20d%3D%22M3%2036%20L24%2033%20L44%2020%22%20fill%3D%22none%22%20stroke%3D%22%235a6069%22%20stroke-width%3D%221.6%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3Ccircle%20cx%3D%2244%22%20cy%3D%2224%22%20r%3D%221.6%22%20fill%3D%22%233767a6%22/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#e7e9ec;
+    --panel:#f4f5f7;
+    --panel-border:#c7cbd1;
+    --ink:#26292e;
+    --ink-soft:#5a6069;
+    --accent:#3767a6;
+    --accent-soft:#c9d8ec;
+    --grid-major:#aeb3ba;
+    --grid-minor:#d6d9dd;
+    --axis:#6b7178;
+    --danger:#a63737;
+    --canvas-bg:#fbfbfc;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: "Segoe UI", Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--bg); color:var(--ink);
+    font-family:var(--sans); font-size:13px;
+    overflow:hidden;
+  }
+  #app{
+    display:grid;
+    grid-template-columns: 1fr 6px 300px;
+    grid-template-rows: 56px 44px 1fr 26px;
+    grid-template-areas:
+      "header  header  header"
+      "toolbar toolbar toolbar"
+      "canvas  resizer side"
+      "status  resizer side";
+    width:100vw; height:100vh;
+  }
+  #header{
+    grid-area:header;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px;
+    background:var(--panel);
+    border-bottom:1px solid var(--panel-border);
+  }
+  #header .brand{ display:flex; align-items:center; gap:10px; min-width:0; }
+  #header .brand-icon{ width:38px; height:38px; flex:0 0 auto; }
+  #header .brand-title{
+    font-size:19px; font-weight:700; color:var(--ink); letter-spacing:.01em;
+    white-space:nowrap;
+  }
+  #header .legal{
+    font-size:10px; color:var(--ink-soft); font-family:var(--mono);
+    text-align:right; white-space:nowrap; padding-left:12px;
+  }
+  #sideResizer{
+    grid-area:resizer; cursor:ew-resize; background:var(--panel-border);
+    position:relative;
+  }
+  #sideResizer:hover, #sideResizer.active{ background:var(--accent); }
+  #toolbar{
+    grid-area: toolbar;
+    display:flex; align-items:center; gap:6px;
+    padding:0 10px;
+    background:var(--panel);
+    border-bottom:1px solid var(--panel-border);
+  }
+  #toolbar .sep{ width:1px; height:24px; background:var(--panel-border); margin:0 4px;}
+  #toolbar button{
+    display:flex; align-items:center; gap:5px;
+    background:#fff; border:1px solid var(--panel-border);
+    color:var(--ink); padding:6px 10px; border-radius:3px;
+    cursor:pointer; font-size:12px; font-family:var(--sans);
+  }
+  #toolbar button:hover{ background:var(--accent-soft); }
+  #toolbar button.active{ background:var(--accent); color:#fff; border-color:var(--accent);}
+  #toolbar .grow{flex:1;}
+  #toolbar label{font-size:11px; color:var(--ink-soft); margin-right:3px;}
+  #toolbar select{
+    border:1px solid var(--panel-border); border-radius:3px; padding:4px 6px; font-size:12px;
+    background:#fff; color:var(--ink);
+  }
+  #canvasWrap{ grid-area:canvas; position:relative; background:var(--canvas-bg); overflow:hidden;}
+  #canvas{ position:absolute; top:0; left:0; }
+  #side{
+    grid-area:side; background:var(--panel);
+    overflow-y:auto; padding:10px;
+    min-width:220px;
+  }
+  #status{
+    grid-area:status; background:var(--panel); border-top:1px solid var(--panel-border);
+    display:flex; align-items:center; padding:0 10px; font-size:11px; color:var(--ink-soft);
+    gap:16px; font-family:var(--mono);
+  }
+  h3{ font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:14px 0 6px; }
+  h3:first-child{ margin-top:0; }
+  table{ width:100%; border-collapse:collapse; font-size:11px; font-family:var(--mono);}
+  table th, table td{ border:1px solid var(--panel-border); padding:3px 5px; text-align:right;}
+  table th{ background:#e9ebee; font-weight:600;}
+  table td.l, table th.l{ text-align:left;}
+  .metric{ display:flex; justify-content:space-between; padding:2px 0; font-family:var(--mono); font-size:12px;}
+  .metric span:first-child{ color:var(--ink-soft);}
+  .clip-item{ font-size:11px; color:var(--danger); padding:2px 0;}
+  .empty-note{ font-size:11px; color:var(--ink-soft); font-style:italic;}
+
+  /* modal: floating, draggable, resizable property panel (not a blocking overlay) */
+  #modalOverlay{
+    position:fixed; inset:0; pointer-events:none;
+    display:none; z-index:50;
+  }
+  #modalOverlay.show{ display:block; }
+  #modal{
+    position:absolute; pointer-events:auto;
+    background:#fff; border:1px solid var(--panel-border); border-radius:6px;
+    width:320px; height:auto; min-width:260px; min-height:220px;
+    max-width:90vw; max-height:85vh;
+    box-shadow:0 10px 34px rgba(0,0,0,.28);
+    resize:both; overflow:auto;
+    display:flex; flex-direction:column;
+  }
+  #modal .modal-head{
+    padding:10px 14px; border-bottom:1px solid var(--panel-border);
+    font-weight:600; font-size:13px;
+    cursor:move; user-select:none;
+    display:flex; align-items:center; justify-content:space-between;
+    flex:0 0 auto;
+  }
+  #modal .modal-head .modal-close{
+    cursor:pointer; color:var(--ink-soft); font-size:14px; padding:0 4px; border:none; background:none;
+  }
+  #modal .modal-head .modal-close:hover{ color:var(--danger); }
+  #modal .modal-body{ padding:12px 14px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; flex:1 1 auto;}
+  #modal .modal-foot{
+    padding:10px 14px; border-top:1px solid var(--panel-border);
+    display:flex; justify-content:space-between; gap:8px;
+    flex:0 0 auto;
+  }
+  .field{ display:flex; flex-direction:column; gap:3px;}
+  .field label{ font-size:11px; color:var(--ink-soft);}
+  .field input, .field select{
+    border:1px solid var(--panel-border); border-radius:3px; padding:5px 7px; font-size:12px;
+    font-family:var(--mono);
+  }
+  .field input.invalid{ border-color:var(--danger); background:#fdecec;}
+  .btn{ border:1px solid var(--panel-border); background:#fff; color:var(--ink); padding:6px 12px; border-radius:3px; cursor:pointer; font-size:12px;}
+  .btn:hover{ background:var(--accent-soft);}
+  .btn.primary{ background:var(--accent); border-color:var(--accent); color:#fff;}
+  .btn.danger{ background:#fff; border-color:var(--danger); color:var(--danger);}
+  .btn.danger:hover{ background:#fbeaea;}
+  #fileInput{ display:none; }
+
+  /* Fourier optics floating panel (same floating/draggable/resizable pattern as #modal) */
+  #fourierOverlay{
+    position:fixed; inset:0; pointer-events:none; display:none; z-index:51;
+  }
+  #fourierOverlay.show{ display:block; }
+  #fourierPanel{
+    position:absolute; pointer-events:auto;
+    background:#fff; border:1px solid var(--panel-border); border-radius:6px;
+    width:460px; height:auto; min-width:380px; min-height:300px;
+    max-width:92vw; max-height:88vh;
+    box-shadow:0 10px 34px rgba(0,0,0,.28);
+    resize:both; overflow:auto;
+    display:flex; flex-direction:column;
+  }
+  #fourierPanel .modal-body{ gap:10px; }
+  .fourier-row{ display:flex; align-items:flex-end; gap:8px; }
+  .fourier-row .field{ flex:1; }
+  .fourier-row button.btn{ flex:0 0 auto; height:28px; padding:0 10px; }
+  .fourier-section-title{
+    font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft);
+    margin:4px 0 0; padding-top:8px; border-top:1px dashed var(--panel-border);
+  }
+  .fourier-section-title:first-child{ border-top:none; padding-top:0; margin-top:0; }
+  #fourierProgressWrap{ display:none; flex-direction:column; gap:4px; }
+  #fourierProgressWrap.show{ display:flex; }
+  #fourierProgressBar{
+    width:100%; height:10px; border-radius:5px; background:#e3e5e8; overflow:hidden;
+    border:1px solid var(--panel-border);
+  }
+  #fourierProgressFill{ height:100%; width:0%; background:var(--accent); transition:width .08s linear; }
+  #fourierStatusText{ font-size:11px; color:var(--ink-soft); font-family:var(--mono); }
+  #fourierError{ font-size:11px; color:var(--danger); display:none; }
+  #fourierError.show{ display:block; }
+  #fourierPlots{
+    display:none; grid-template-columns:1fr 1fr; gap:8px;
+  }
+  #fourierPlots.show{ display:grid; }
+  .fourier-plot-cell{ border:1px solid var(--panel-border); border-radius:4px; padding:4px; background:#fbfbfc; }
+  .fourier-plot-cell canvas{ width:100%; display:block; }
+  .fourier-plot-title{ font-size:10px; color:var(--ink-soft); text-align:center; margin-bottom:2px; }
+
+  /* Help floating panel (same floating/draggable/resizable pattern as #modal) */
+  #helpOverlay{
+    position:fixed; inset:0; pointer-events:none; display:none; z-index:51;
+  }
+  #helpOverlay.show{ display:block; }
+  #helpPanel{
+    position:absolute; pointer-events:auto;
+    background:#fff; border:1px solid var(--panel-border); border-radius:6px;
+    width:480px; height:520px; min-width:340px; min-height:260px;
+    max-width:92vw; max-height:88vh;
+    left:calc(50vw - 240px); top:calc(50vh - 260px);
+    box-shadow:0 10px 34px rgba(0,0,0,.28);
+    resize:both; overflow:auto;
+    display:flex; flex-direction:column;
+  }
+  #helpBody{ font-size:12.5px; line-height:1.5; color:var(--ink); }
+  #helpBody h4{
+    font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--accent);
+    margin:16px 0 6px; padding-top:10px; border-top:1px dashed var(--panel-border);
+  }
+  #helpBody h4:first-child{ margin-top:0; padding-top:0; border-top:none; }
+  #helpBody p{ margin:0 0 8px; }
+  #helpBody ul{ margin:0 0 8px; padding-left:18px; }
+  #helpBody li{ margin-bottom:6px; }
+  #helpBody code{
+    font-family:var(--mono); font-size:11px; background:#eef0f2; border-radius:3px; padding:1px 4px;
+  }
+
+  /* roller dial number picker */
+  .roller-field{
+    display:flex; align-items:stretch; border:1px solid var(--panel-border); border-radius:3px;
+    overflow:hidden; height:28px; background:#fff;
+  }
+  .roller-field .roller-btn{
+    width:22px; flex:0 0 auto; border:none; background:#eef0f2; color:var(--ink-soft);
+    cursor:pointer; font-size:12px; line-height:1;
+  }
+  .roller-field .roller-btn:hover{ background:var(--accent-soft); color:var(--ink); }
+  .roller-field .roller-btn:active{ background:var(--accent); color:#fff; }
+  .roller-field .roller-value{
+    flex:1 1 auto; display:flex; align-items:center; justify-content:center;
+    font-family:var(--mono); font-size:12px; cursor:ew-resize; user-select:none;
+    border-left:1px solid var(--panel-border); border-right:1px solid var(--panel-border);
+    background:repeating-linear-gradient(90deg, #fafbfc 0 3px, #f2f3f5 3px 4px);
+    position:relative;
+  }
+  .roller-field .roller-value.dragging{ background:var(--accent-soft); }
+  .roller-field .roller-value input{
+    width:100%; height:100%; border:none; text-align:center; font-family:var(--mono);
+    font-size:12px; padding:0; background:transparent;
+  }
+  .field-row{ display:flex; align-items:center; gap:8px; }
+  .field-row label{ font-size:11px; color:var(--ink-soft); flex:1; }
+  .field-row input[type="checkbox"]{ width:15px; height:15px; }
+  .dialog-settings{
+    margin-top:6px; padding-top:10px; border-top:1px dashed var(--panel-border);
+    display:flex; flex-direction:column; gap:8px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div class="brand">
+      <svg class="brand-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <line x1="2" y1="24" x2="46" y2="24" stroke="#aeb3ba" stroke-width="1.2" stroke-dasharray="2 2"/>
+        <path d="M24 6 C34 6 34 42 24 42 C14 42 14 6 24 6 Z" fill="#c9d8ec" stroke="#3767a6" stroke-width="1.8"/>
+        <path d="M3 12 L24 15 L44 32" fill="none" stroke="#26292e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M3 36 L24 33 L44 20" fill="none" stroke="#5a6069" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="44" cy="24" r="1.6" fill="#3767a6"/>
+      </svg>
+      <span class="brand-title">Linear Lens Liner</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <button class="btn" id="btnHelp">Help</button>
+      <div class="legal">Distributed under the MIT license by numerius.engineering@gmail.com</div>
+    </div>
+  </div>
+  <div id="toolbar">
+    <button data-mode="select">Select</button>
+    <button data-mode="source">Add Source</button>
+    <button data-mode="lens">Add Lens</button>
+    <button data-mode="sink">Add Sink</button>
+    <div class="sep"></div>
+    <button id="btnRun">Compute Rays</button>
+    <button id="btnFourier">Compute Fourier</button>
+    <div class="sep"></div>
+    <button id="btnSave">Save</button>
+    <button id="btnLoad">Load</button>
+    <div class="sep"></div>
+    <button id="btnFit">Fit View</button>
+    <div class="grow"></div>
+    <label>Snap</label>
+    <select id="snapSelect">
+      <option value="1">1 mm</option>
+      <option value="2">2 mm</option>
+      <option value="5" selected>5 mm</option>
+      <option value="10">10 mm</option>
+      <option value="25">25 mm</option>
+      <option value="50">50 mm</option>
+    </select>
+    <div class="sep"></div>
+    <label>Media Index</label>
+    <div id="mediaIndexWrap" style="width:90px;"></div>
+    <div class="sep"></div>
+    <label>Ray Colors</label>
+    <select id="colorProfileSelect">
+      <option value="grayscale" selected>Grayscale</option>
+      <option value="spectrum">Spectrum</option>
+    </select>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <div id="sideResizer"></div>
+
+  <div id="side">
+    <h3>Selection</h3>
+    <div id="selectionInfo" class="empty-note">No component selected.</div>
+
+    <h3>Simulation Output</h3>
+    <div id="outputMetrics" class="empty-note">Run the simulation to see results.</div>
+
+    <h3>Ray Table</h3>
+    <div id="rayTableWrap" class="empty-note">No rays traced yet.</div>
+
+    <h3>Clipping Report</h3>
+    <div id="clipReport" class="empty-note">No clipping detected.</div>
+  </div>
+
+  <div id="status">
+    <span id="statusMode">Mode: Select</span>
+    <span id="statusZoom">Zoom: 100%</span>
+    <span id="statusCursor">x: -- z: --</span>
+    <span id="statusCount">Components: 0</span>
+  </div>
+</div>
+
+<div id="modalOverlay">
+  <div id="modal">
+    <div class="modal-head" id="modalDragHandle">
+      <span id="modalTitle">Edit Component</span>
+      <button class="modal-close" id="modalClose" title="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn danger" id="modalDelete">Delete</button>
+      <div style="flex:1"></div>
+      <button class="btn" id="modalCancel">Cancel</button>
+      <button class="btn primary" id="modalSave">Save</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="application/json">
+
+<div id="helpOverlay">
+  <div id="helpPanel">
+    <div class="modal-head" id="helpDragHandle">
+      <span>Help &mdash; Linear Lens Liner</span>
+      <button class="modal-close" id="helpClose" title="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="helpBody">
+
+      <h4>The basics</h4>
+      <ul>
+        <li><b>Add a component</b>: click <i>Add Source</i>, <i>Add Lens</i>, or <i>Add Sink</i>, then click the canvas to place it.</li>
+        <li><b>Select / move</b>: in <i>Select</i> mode, click to select, drag to move (snapped to the current grid size).</li>
+        <li><b>Edit properties</b>: double-click a component. Numeric fields are "roller" controls &mdash; drag left/right, scroll over them, use the +/- buttons, or click once to type a value directly. A shared step size at the bottom of the panel sets the roller increment; "Recompute on change" controls whether edits re-run the ray-trace live or only on Save.</li>
+        <li><b>Keyboard</b>: <code>Delete</code> removes the selection, arrow keys nudge it by one snap step, <code>Ctrl+D</code> duplicates it, <code>Ctrl+S</code> downloads the design as JSON, <code>Ctrl+O</code> loads one.</li>
+        <li><b>Canvas</b>: scroll to zoom, middle-mouse-drag to pan, <i>Fit View</i> to frame the whole design.</li>
+      </ul>
+
+      <h4>Ray tracing &mdash; "Compute Rays"</h4>
+      <p>Traces every source's rays (evenly spaced across its beam width, up to 99 per source) through all lenses to every downstream sink. Results &mdash; spot diameter, centroid, magnification, angular magnification, a per-ray table, and a clipping report &mdash; appear in the side panel. Rays that miss a component's clear aperture are clipped. <i>Ray Colors</i> in the toolbar switches between grayscale shading and a ROYGBV spectrum across the ray bundle.</p>
+
+      <h4>Lens geometry tools</h4>
+      <p>Every lens's property panel includes an <b>Index of refraction</b> field (with a calculator for <code>n = &radic;&epsilon;r</code> from relative permittivity), a <b>Geometry Report</b> button (downloads a tabulated <code>.txt</code> of derived surface radii/sag/edge thickness), and a <b>Generate in FreeCAD</b> button (downloads a <code>.FCMacro</code> Python macro that builds the lens as a real solid body). Idealized "Thin" lenses have no physical surfaces to report or model; meniscus shapes assume a documented radius ratio, since focal length and index alone can't uniquely fix two radii.</p>
+
+      <h4>Fourier optics &mdash; "Compute Fourier"</h4>
+      <p>Opens a wave-optics configuration panel: choose a Source/Sink pair, a source amplitude function (Gaussian/boxcar/triangular &mdash; pointing and divergence become an exact tilt and wavefront curvature), wavelength, FFT size, box clipping height (the <i>Auto</i> button sets it to 2&times; the tallest component), and propagation step size in &micro;m (keep this well below a lens's surface sag to resolve its curvature accurately). Physical lenses are meshed directly into the propagation grid using their real refractive index; idealized Thin lenses fall back to a phase-screen approximation. A progress bar shows an estimated time remaining, and <b>Cancel</b> stops a run in progress. When finished, download <code>results.json</code> (complex field at both planes) and view four plots: source/sink &times; amplitude/unwrapped phase.</p>
+
+      <h4>Global media index</h4>
+      <p>The <b>Media Index</b> control in the toolbar is used everywhere: it adjusts each lens's effective focal length in the ray-trace (a lens in water is weaker than the same lens in air) and sets the background index for the Fourier calculation, so both stay consistent.</p>
+
+      <h4>Saving and loading</h4>
+      <p><b>Save</b> downloads the current design (components, snap size, zoom) as JSON. <b>Load</b> reads one back in.</p>
+
+    </div>
+    <div class="modal-foot">
+      <div style="flex:1"></div>
+      <button class="btn primary" id="helpCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="fourierOverlay">
+  <div id="fourierPanel">
+    <div class="modal-head" id="fourierDragHandle">
+      <span>Fourier Optics &mdash; Wave Propagation</span>
+      <button class="modal-close" id="fourierClose" title="Close">&#x2715;</button>
+    </div>
+    <div class="modal-body" id="fourierBody">
+
+      <div class="fourier-section-title">Path</div>
+      <div class="fourier-row">
+        <div class="field"><label>Source</label><select id="fourierSourceSelect"></select></div>
+        <div class="field"><label>Sink</label><select id="fourierSinkSelect"></select></div>
+      </div>
+
+      <div class="fourier-section-title">Source Field</div>
+      <div class="field">
+        <label>Source function</label>
+        <select id="fourierSourceFunc">
+          <option value="gaussian" selected>Gaussian</option>
+          <option value="boxcar">Boxcar</option>
+          <option value="triangular">Triangular</option>
+        </select>
+      </div>
+      <div class="field"><label>Wavelength (nm)</label><div id="fourierWavelengthWrap"></div></div>
+
+      <div class="fourier-section-title">Grid</div>
+      <div class="field">
+        <label>FFT size (transverse grid points)</label>
+        <select id="fourierFftSize">
+          <option value="256">256</option>
+          <option value="512">512</option>
+          <option value="1024">1024</option>
+          <option value="2048" selected>2048</option>
+          <option value="4096">4096</option>
+          <option value="8192">8192</option>
+          <option value="16384">16384</option>
+          <option value="32768">32768</option>
+        </select>
+      </div>
+      <div class="fourier-row">
+        <div class="field"><label>Box clipping height (mm)</label><div id="fourierBoxHeightWrap"></div></div>
+        <button class="btn" id="fourierAutoHeight" title="Set to 2x the tallest component in the path">Auto (2&times;)</button>
+      </div>
+      <div class="field"><label>Propagation step size (&micro;m)</label><div id="fourierStepWrap"></div></div>
+      <div class="field"><label>Media index <span style="font-weight:normal;color:var(--ink-soft);">(global &mdash; set in the toolbar)</span></label><div id="fourierMediaIndexDisplay" style="font-family:var(--mono); font-size:12px; padding:5px 7px; border:1px solid var(--panel-border); border-radius:3px; background:#f2f3f5;">1.000</div></div>
+
+      <div id="fourierError"></div>
+      <div id="fourierProgressWrap">
+        <div id="fourierProgressBar"><div id="fourierProgressFill"></div></div>
+        <div id="fourierStatusText">&nbsp;</div>
+      </div>
+
+      <div id="fourierPlots">
+        <div class="fourier-plot-cell"><div class="fourier-plot-title">Source amplitude</div><canvas id="plotSrcAmp" width="400" height="160"></canvas></div>
+        <div class="fourier-plot-cell"><div class="fourier-plot-title">Source unwrapped phase</div><canvas id="plotSrcPhase" width="400" height="160"></canvas></div>
+        <div class="fourier-plot-cell"><div class="fourier-plot-title">Sink amplitude</div><canvas id="plotSinkAmp" width="400" height="160"></canvas></div>
+        <div class="fourier-plot-cell"><div class="fourier-plot-title">Sink unwrapped phase</div><canvas id="plotSinkPhase" width="400" height="160"></canvas></div>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="fourierDownload" style="display:none;">Download results.json</button>
+      <div style="flex:1"></div>
+      <button class="btn danger" id="fourierStop" style="display:none;">Cancel</button>
+      <button class="btn" id="fourierCancel">Close</button>
+      <button class="btn primary" id="fourierCalculate">Calculate</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   RAY
+   ========================================================================= */
+class Ray {
+  constructor(x, theta, kind, sourceId, fraction, label) {
+    this.x = x;                 // mm
+    this.theta = theta;         // radians
+    this.kind = kind;           // 'top' | 'bottom' | 'mid'
+    this.sourceId = sourceId;
+    this.fraction = fraction === undefined ? 0.5 : fraction; // 0 = lowest ray, 1 = highest ray in the bundle
+    this.label = label || kind;
+    this.alive = true;
+    this.clippedBy = null;
+    this.clipLocation = null;   // {x,z}
+    this.path = [];             // array of {x,z} polyline points actually traversed
+    this.finalX = x;
+    this.finalTheta = theta;
+  }
+}
+
+/* =========================================================================
+   COMPONENT (base) + subclasses
+   ========================================================================= */
+let __idCounter = 1;
+function nextId(prefix) { return prefix + "_" + (__idCounter++); }
+
+class Component {
+  constructor(type, x, z) {
+    this.id = nextId(type);
+    this.type = type;           // 'source' | 'lens' | 'sink'
+    this.name = type[0].toUpperCase() + type.slice(1);
+    this.class = "generic";
+    this.x = x || 0;
+    this.z = z || 0;
+    this.height = 20;
+    this.thickness = 2;
+  }
+  clamp() {
+    if (!isFinite(this.x)) this.x = 0;
+    if (!isFinite(this.z)) this.z = 0;
+    if (!isFinite(this.height) || this.height <= 0) this.height = 1;
+    if (!isFinite(this.thickness) || this.thickness < 0) this.thickness = 0;
+  }
+  aperturePasses(rayX) {
+    // rayX is an absolute world height; the component's clear aperture is centered
+    // on its own x position, not necessarily on the global optical axis.
+    return Math.abs(rayX - this.x) <= this.height / 2;
+  }
+  toJSON() {
+    return { id: this.id, type: this.type, name: this.name, class: this.class,
+      x: this.x, z: this.z, height: this.height, thickness: this.thickness };
+  }
+}
+
+class Source extends Component {
+  constructor(x, z) {
+    super("source", x, z);
+    this.class = "laser";
+    this.beamWidth = 10;       // mm, full width
+    this.pointing = 0;         // deg
+    this.divergence = 5;       // deg full angle
+    this.rayCount = 3;         // number of rays traced, 1-99, evenly spaced across beamWidth
+  }
+  clamp() {
+    super.clamp();
+    if (!isFinite(this.beamWidth) || this.beamWidth < 0) this.beamWidth = 0;
+    if (!isFinite(this.pointing)) this.pointing = 0;
+    if (!isFinite(this.divergence) || this.divergence < 0) this.divergence = 0;
+    if (!isFinite(this.rayCount)) this.rayCount = 3;
+    this.rayCount = Math.round(this.rayCount);
+    this.rayCount = Math.max(1, Math.min(99, this.rayCount));
+  }
+  generateRays() {
+    const degToRad = Math.PI / 180;
+    const n = this.rayCount;
+    const rays = [];
+    for (let i = 0; i < n; i++) {
+      const t = n === 1 ? 0.5 : i / (n - 1);   // 0 = bottom-most ray, 1 = top-most ray
+      const x = this.x + (-this.beamWidth / 2 + t * this.beamWidth);
+      const angleDeg = (this.pointing - this.divergence / 2) + t * this.divergence;
+      const kind = (i === n - 1) ? "top" : (i === 0) ? "bottom" : "mid";
+      const label = n <= 3 ? (kind === "mid" ? "middle" : kind) : `ray ${i + 1}/${n}`;
+      rays.push(new Ray(x, angleDeg * degToRad, kind, this.id, t, label));
+    }
+    return rays;
+  }
+  toJSON() {
+    return Object.assign(super.toJSON(), {
+      beamWidth: this.beamWidth, pointing: this.pointing, divergence: this.divergence, rayCount: this.rayCount
+    });
+  }
+}
+
+const LENS_TYPES = ["Thin", "Plano Convex", "Plano Concave", "Bi Convex", "Bi Concave", "Positive Meniscus", "Negative Meniscus"];
+
+class Lens extends Component {
+  constructor(x, z) {
+    super("lens", x, z);
+    this.class = "optic";
+    this.focalLength = 100;    // mm
+    this.lensType = "Thin";
+    this.refractiveIndex = 1.5; // index of refraction, n
+  }
+  clamp() {
+    super.clamp();
+    if (!isFinite(this.focalLength) || this.focalLength === 0) this.focalLength = 100;
+    if (LENS_TYPES.indexOf(this.lensType) === -1) this.lensType = "Thin";
+    if (!isFinite(this.refractiveIndex) || this.refractiveIndex <= 1) this.refractiveIndex = 1.5;
+  }
+  // The stored focalLength is the "design" focal length, i.e. what the lensmaker's
+  // equation (n_lens - 1)*(1/R1 - 1/R2) gives for this glass shape surrounded by vacuum/air
+  // (n_media=1). Immersing the same physical shape in a different medium changes its actual
+  // optical power to (n_lens/n_media - 1)*(1/R1 - 1/R2); dividing the two relations lets the
+  // unknown shape factor (1/R1 - 1/R2) cancel out entirely, so this works for every lens type
+  // (including idealized Thin lenses, which have no explicit radii at all):
+  //   f_effective = f_design * (n_lens - 1) / (n_lens/n_media - 1)
+  effectiveFocalLength(mediaIndex) {
+    const nMedia = (isFinite(mediaIndex) && mediaIndex > 0) ? mediaIndex : 1;
+    const nLens = this.refractiveIndex;
+    const denom = (nLens / nMedia) - 1;
+    if (Math.abs(denom) < 1e-9) return Infinity; // index-matched to its surroundings: no optical power
+    return this.focalLength * (nLens - 1) / denom;
+  }
+  matrix(mediaIndex) {
+    // [1 0; -1/f 1], using the focal length as modified by the surrounding media index
+    const fEff = this.effectiveFocalLength(mediaIndex === undefined ? 1 : mediaIndex);
+    return { a: 1, b: 0, c: -1 / fEff, d: 1 }; // 1/Infinity safely evaluates to 0 (no bending)
+  }
+  toJSON() {
+    return Object.assign(super.toJSON(), { focalLength: this.focalLength, lensType: this.lensType, refractiveIndex: this.refractiveIndex });
+  }
+
+  /* Derive physical surface geometry (radii, sag, edge thickness) from focal length,
+     index of refraction, diameter, and center thickness using the thin-lens equation
+     1/f = (n-1)(1/R1 - 1/R2), with the standard sign convention: a radius is positive
+     when its center of curvature lies on the +z (downstream) side of its own vertex.
+     Bi-Convex/Bi-Concave assume symmetric radii; meniscus types assume a representative
+     2.5:1 ratio between the two radii, since one focal length alone can't fix both. */
+  computeGeometry() {
+    const n = this.refractiveIndex;
+    const f = Math.abs(this.focalLength);
+    const D = this.height;
+    const h = D / 2;
+    const ct = this.thickness;
+
+    if (this.lensType === "Thin") {
+      return {
+        physical: false, type: this.lensType, diameter: D, centerThickness: ct,
+        index: n, focalLength: f,
+        note: "Thin lens is an idealized paraxial element with no defined surface curvature; no physical solid is derived."
+      };
+    }
+
+    let R1 = Infinity, R2 = Infinity, shapeNote = "";
+    const k = 2.5; // meniscus shape-factor ratio (representative, not unique)
+    switch (this.lensType) {
+      case "Plano Convex": R1 = Infinity; R2 = -(n - 1) * f; break;
+      case "Plano Concave": R1 = Infinity; R2 = (n - 1) * f; break;
+      case "Bi Convex": { const R = 2 * (n - 1) * f; R1 = R; R2 = -R; break; }
+      case "Bi Concave": { const R = 2 * (n - 1) * f; R1 = -R; R2 = R; break; }
+      case "Positive Meniscus":
+        R1 = (n - 1) * f * (1 - 1 / k); R2 = k * R1;
+        shapeNote = `Shape factor R2/R1 = ${k} assumed for this converging meniscus (representative choice, not a unique solution).`;
+        break;
+      case "Negative Meniscus":
+        R2 = (n - 1) * f * (1 - 1 / k); R1 = k * R2;
+        shapeNote = `Shape factor R1/R2 = ${k} assumed for this diverging meniscus (representative choice, not a unique solution).`;
+        break;
+    }
+
+    const sag1 = sagSigned(R1, h);
+    const sag2 = sagSigned(R2, h);
+    const warnings = [];
+    if (sag1 === null || sag2 === null) {
+      warnings.push("Computed surface radius is smaller than the lens semi-diameter — geometry is infeasible for the given focal length, index, and diameter.");
+    }
+    const edgeThickness = (sag1 === null || sag2 === null) ? null : ct + sag2 - sag1;
+    if (edgeThickness !== null && edgeThickness <= 0) {
+      warnings.push("Computed edge thickness is zero or negative — this design is not physically realizable with the current parameters.");
+    }
+
+    return {
+      physical: true, type: this.lensType, diameter: D, centerThickness: ct, edgeThickness,
+      index: n, focalLength: f, R1, R2, sag1, sag2, shapeNote, warnings
+    };
+  }
+}
+function sagMagnitude(Rabs, halfD) {
+  if (!isFinite(Rabs)) return 0;
+  if (Rabs < halfD) return null; // physically impossible: radius smaller than the lens semi-diameter
+  return Rabs - Math.sqrt(Rabs * Rabs - halfD * halfD);
+}
+function sagSigned(R, halfD) {
+  if (!isFinite(R)) return 0;
+  const s = sagMagnitude(Math.abs(R), halfD);
+  if (s === null) return null;
+  return R >= 0 ? s : -s;
+}
+
+class Sink extends Component {
+  constructor(x, z) {
+    super("sink", x, z);
+    this.class = "detector";
+    this.lastResult = null; // filled in by SimulationEngine
+  }
+  toJSON() { return super.toJSON(); }
+}
+
+function componentFromJSON(o) {
+  let c;
+  if (o.type === "source") c = new Source(o.x, o.z);
+  else if (o.type === "lens") c = new Lens(o.x, o.z);
+  else c = new Sink(o.x, o.z);
+  Object.assign(c, o);
+  c.id = o.id || c.id;
+  c.clamp();
+  return c;
+}
+
+/* =========================================================================
+   SIMULATION ENGINE
+   ========================================================================= */
+class SimulationEngine {
+  constructor(app) { this.app = app; }
+
+  run(components) {
+    const sources = components.filter(c => c.type === "source");
+    const optics = components.filter(c => c.type !== "source").sort((a, b) => a.z - b.z);
+    for (const s of optics) if (s.type === "sink") s.lastResult = { rays: [], byBundle: [] };
+
+    const allBundles = []; // {sourceId, rays:[top,mid,bot] at each sink z reached}
+
+    for (const source of sources) {
+      const rays = source.generateRays();
+      for (const ray of rays) {
+        ray.path.push({ x: ray.x, z: source.z });
+        let curX = ray.x, curTheta = ray.theta, curZ = source.z;
+        for (const comp of optics) {
+          if (comp.z < curZ) continue; // only forward components
+          const d = comp.z - curZ;
+          // propagation matrix [1 d; 0 1]
+          const propX = curX + d * curTheta;
+          const propTheta = curTheta;
+          // aperture check at this component's plane
+          if (!comp.aperturePasses(propX)) {
+            ray.alive = false;
+            ray.clippedBy = comp.id;
+            ray.clipLocation = { x: propX, z: comp.z };
+            ray.path.push({ x: propX, z: comp.z });
+            curX = propX; curTheta = propTheta; curZ = comp.z;
+            break;
+          }
+          ray.path.push({ x: propX, z: comp.z });
+          curX = propX; curTheta = propTheta; curZ = comp.z;
+
+          if (comp.type === "lens") {
+            const m = comp.matrix(this.app && this.app.mediaIndex);
+            const relX = curX - comp.x;   // ray height relative to this lens's own axis
+            const newRelX = m.a * relX + m.b * curTheta;
+            const newTheta = m.c * relX + m.d * curTheta;
+            curX = comp.x + newRelX; curTheta = newTheta;
+          } else if (comp.type === "sink") {
+            ray.finalX = curX; ray.finalTheta = curTheta;
+            comp.lastResult.rays.push(ray);
+          }
+        }
+        ray.finalX = curX; ray.finalTheta = curTheta;
+      }
+      // group this source's bundle per sink
+      for (const comp of optics) {
+        if (comp.type !== "sink") continue;
+        const bundleRays = rays.filter(r => comp.lastResult.rays.indexOf(r) !== -1);
+        if (bundleRays.length) {
+          comp.lastResult.byBundle.push({ sourceId: source.id, sourceName: source.name, rays: bundleRays, sourceBeamWidth: source.beamWidth, sourceDivergence: source.divergence });
+        }
+      }
+    }
+
+    // compute metrics per sink
+    for (const comp of optics) {
+      if (comp.type !== "sink") continue;
+      this.computeSinkMetrics(comp);
+    }
+    return { sources, optics };
+  }
+
+  computeSinkMetrics(sink) {
+    const aliveRays = sink.lastResult.rays.filter(r => r.alive);
+    let spotDiameter = null, centroid = null;
+    if (aliveRays.length) {
+      const xs = aliveRays.map(r => r.finalX);
+      spotDiameter = Math.max(...xs) - Math.min(...xs);
+      centroid = xs.reduce((a, b) => a + b, 0) / xs.length;
+    }
+    // magnification per bundle (top vs bottom ray), averaged if multiple sources
+    const mags = [], angMags = [];
+    for (const bundle of sink.lastResult.byBundle) {
+      const top = bundle.rays.find(r => r.kind === "top");
+      const bot = bundle.rays.find(r => r.kind === "bottom");
+      if (top && bot && top.alive && bot.alive) {
+        const initSpread = bundle.sourceBeamWidth;
+        const finalSpread = top.finalX - bot.finalX;
+        if (initSpread !== 0) mags.push(finalSpread / initSpread);
+        const initAngSpread = bundle.sourceDivergence * Math.PI / 180;
+        const finalAngSpread = top.finalTheta - bot.finalTheta;
+        if (initAngSpread !== 0) angMags.push(finalAngSpread / initAngSpread);
+      }
+    }
+    const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+    sink.lastResult.spotDiameter = spotDiameter;
+    sink.lastResult.centroid = centroid;
+    sink.lastResult.magnification = avg(mags);
+    sink.lastResult.angularMagnification = avg(angMags);
+    sink.lastResult.clippingReport = sink.lastResult.rays
+      .filter(r => !r.alive)
+      .map(r => ({ sourceId: r.sourceId, kind: r.kind, clippedBy: r.clippedBy, clipLocation: r.clipLocation }));
+  }
+}
+
+/* =========================================================================
+   SERIALIZER
+   ========================================================================= */
+function downloadTextFile(filename, text) {
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function buildGeometryReportText(lens) {
+  const g = lens.computeGeometry();
+  const pad = (s, w) => String(s).padEnd(w);
+  const lines = [];
+  lines.push("LENS GEOMETRY REPORT");
+  lines.push("=".repeat(56));
+  lines.push(`Name:                 ${lens.name}`);
+  lines.push(`Lens type:            ${g.type}`);
+  lines.push(`Focal length:         ${g.focalLength.toFixed(3)} mm`);
+  lines.push(`Index of refraction:  ${g.index.toFixed(5)}`);
+  lines.push(`Diameter:             ${g.diameter.toFixed(3)} mm`);
+  lines.push(`Center thickness:     ${g.centerThickness.toFixed(3)} mm`);
+  lines.push("-".repeat(56));
+  if (!g.physical) {
+    lines.push(g.note);
+  } else {
+    lines.push(`Edge thickness:       ${g.edgeThickness === null ? "N/A" : g.edgeThickness.toFixed(3) + " mm"}`);
+    lines.push("");
+    lines.push(pad("Surface", 12) + pad("Radius (mm)", 18) + pad("Sag (mm)", 12));
+    lines.push(pad("Front", 12) + pad(isFinite(g.R1) ? g.R1.toFixed(3) : "Flat (\u221e)", 18) + pad(g.sag1 === null ? "N/A" : g.sag1.toFixed(4), 12));
+    lines.push(pad("Back", 12) + pad(isFinite(g.R2) ? g.R2.toFixed(3) : "Flat (\u221e)", 18) + pad(g.sag2 === null ? "N/A" : g.sag2.toFixed(4), 12));
+    if (g.shapeNote) { lines.push(""); lines.push("Note: " + g.shapeNote); }
+    if (g.warnings.length) {
+      lines.push("");
+      lines.push("WARNINGS:");
+      g.warnings.forEach(w => lines.push("  - " + w));
+    }
+  }
+  lines.push("=".repeat(56));
+  lines.push("Sign convention: a radius is positive when its center of curvature");
+  lines.push("lies on the +z (downstream) side of that surface's own vertex.");
+  return lines.join("\n");
+}
+
+function buildFreeCADMacro(lens) {
+  const g = lens.computeGeometry();
+  const D = g.diameter, ct = g.centerThickness;
+  const safeName = (lens.name.replace(/[^A-Za-z0-9_]/g, "_") || "Lens");
+
+  if (!g.physical) {
+    return [
+      "# FreeCAD macro auto-generated by Planar Optics Designer",
+      `# Lens: ${lens.name}  (Thin lens - idealized, no physical surface curvature)`,
+      "# A flat symbolic disc is generated as a placeholder only.",
+      "import FreeCAD as App",
+      "import Part",
+      "",
+      `doc = App.ActiveDocument if App.ActiveDocument else App.newDocument("${safeName}")`,
+      `diameter = ${D}`,
+      `thickness = ${ct || 1}`,
+      "disc = Part.makeCylinder(diameter / 2.0, thickness)",
+      `Part.show(disc, "${safeName}_symbolic")`,
+      "doc.recompute()"
+    ].join("\n");
+  }
+
+  const R1 = g.R1, R2 = g.R2;
+  const margin = Math.max(D * 3, ct * 3, 5);
+
+  function surfaceCode(R, vertexZ, isFront, sphereVar) {
+    if (!isFinite(R)) return `# ${isFront ? "Front" : "Back"} surface is flat -- already flat on the base cylinder, no cut needed`;
+    const center = vertexZ + R;
+    const common = isFront ? (R > 0) : (R < 0);
+    return [
+      `${sphereVar} = Part.makeSphere(${Math.abs(R).toFixed(4)})`,
+      `${sphereVar}.translate(App.Vector(0, 0, ${center.toFixed(4)}))`,
+      `solid = solid.${common ? "common" : "cut"}(${sphereVar})`
+    ].join("\n");
+  }
+
+  const lines = [];
+  lines.push("# FreeCAD macro auto-generated by Planar Optics Designer");
+  lines.push(`# Lens: ${lens.name}  (${g.type})`);
+  lines.push(`# Focal length: ${g.focalLength} mm   Index of refraction: ${g.index}`);
+  if (g.shapeNote) lines.push(`# ${g.shapeNote}`);
+  g.warnings.forEach(w => lines.push(`# WARNING: ${w}`));
+  lines.push("# Run via Macro > Macros... inside FreeCAD, or paste into the Python console.");
+  lines.push("# If a surface looks clipped for very long radii, increase `margin` below and rerun.");
+  lines.push("");
+  lines.push("import FreeCAD as App");
+  lines.push("import Part");
+  lines.push("");
+  lines.push(`doc = App.ActiveDocument if App.ActiveDocument else App.newDocument("${safeName}")`);
+  lines.push("");
+  lines.push(`diameter = ${D}`);
+  lines.push("radius = diameter / 2.0");
+  lines.push(`center_thickness = ${ct}`);
+  lines.push(`margin = ${margin.toFixed(4)}`);
+  lines.push("");
+  lines.push("# Base blank: flat cylinder spanning both vertex planes plus margin on both sides");
+  lines.push("solid = Part.makeCylinder(radius, center_thickness + 2 * margin, App.Vector(0, 0, -margin))");
+  lines.push("");
+  lines.push("# --- Front surface (vertex at z = 0) ---");
+  lines.push(surfaceCode(R1, 0, true, "sphere_front"));
+  lines.push("");
+  lines.push("# --- Back surface (vertex at z = center_thickness) ---");
+  lines.push(surfaceCode(R2, ct, false, "sphere_back"));
+  lines.push("");
+  lines.push(`Part.show(solid, "${safeName}")`);
+  lines.push("doc.recompute()");
+  lines.push("");
+  lines.push("try:");
+  lines.push("    import FreeCADGui as Gui");
+  lines.push("    Gui.ActiveDocument.ActiveView.fitAll()");
+  lines.push("except Exception:");
+  lines.push("    pass");
+  return lines.join("\n");
+}
+
+class Serializer {
+  static toJSON(app) {
+    return {
+      version: 1,
+      gridSnap: app.snap,
+      zoom: app.view.zoom,
+      components: app.components.map(c => c.toJSON())
+    };
+  }
+  static download(app) {
+    const data = JSON.stringify(Serializer.toJSON(app), null, 2);
+    const blob = new Blob([data], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "optics-design.json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  static fromJSON(app, obj) {
+    try {
+      if (!obj || !Array.isArray(obj.components)) throw new Error("Malformed file: missing components array.");
+      const comps = [];
+      for (const raw of obj.components) {
+        try { comps.push(componentFromJSON(raw)); } catch (e) { /* skip bad component */ }
+      }
+      app.components = comps;
+      app.snap = [1, 2, 5, 10, 25, 50].indexOf(obj.gridSnap) !== -1 ? obj.gridSnap : 5;
+      app.view.zoom = (typeof obj.zoom === "number" && isFinite(obj.zoom) && obj.zoom > 0) ? obj.zoom : 1.0;
+      document.getElementById("snapSelect").value = String(app.snap);
+      app.selected = null;
+      app.runSimulation();
+      app.view.fit(app.components);
+      app.render();
+    } catch (e) {
+      alert("Could not load file: " + e.message);
+    }
+  }
+}
+
+/* =========================================================================
+   CANVAS VIEW  (world <-> screen transform, grid & ray/component drawing)
+   ========================================================================= */
+class CanvasView {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.zoom = 1.0;           // pixels per mm at zoom=1 is baseScale
+    this.baseScale = 2.0;      // px per mm
+    this.panX = 60;            // screen px offset for world z=0
+    this.panY = 0;             // screen px offset for world x=0 (set on resize)
+    this.resize();
+  }
+  resize() {
+    const wrap = document.getElementById("canvasWrap");
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    this.canvas.width = w; this.canvas.height = h;
+    if (!this._initialized) { this.panY = h / 2; this._initialized = true; }
+  }
+  get scale() { return this.baseScale * this.zoom; }
+  worldToScreen(x, z) {
+    return { sx: this.panX + z * this.scale, sy: this.panY - x * this.scale };
+  }
+  screenToWorld(sx, sy) {
+    return { x: (this.panY - sy) / this.scale, z: (sx - this.panX) / this.scale };
+  }
+  fit(components) {
+    if (!components.length) { this.zoom = 1; this.panX = 60; this.panY = this.canvas.height / 2; return; }
+    let minZ = Infinity, maxZ = -Infinity, maxH = 0;
+    for (const c of components) {
+      minZ = Math.min(minZ, c.z); maxZ = Math.max(maxZ, c.z);
+      maxH = Math.max(maxH, c.height);
+    }
+    const spanZ = Math.max(maxZ - minZ, 10);
+    const spanX = Math.max(maxH * 1.5, 20);
+    const availW = this.canvas.width - 100;
+    const availH = this.canvas.height - 60;
+    const scaleZ = availW / spanZ;
+    const scaleX = availH / spanX;
+    this.zoom = Math.max(0.05, Math.min(scaleZ, scaleX) / this.baseScale);
+    this.panX = 60 - minZ * this.scale;
+    this.panY = this.canvas.height / 2;
+  }
+  niceStep(mmPerMajorTarget) {
+    const steps = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000];
+    for (const s of steps) if (s >= mmPerMajorTarget) return s;
+    return 1000;
+  }
+  drawGrid() {
+    const ctx = this.ctx, w = this.canvas.width, h = this.canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = getCSS("--canvas-bg"); ctx.fillRect(0, 0, w, h);
+
+    const targetPx = 80;
+    const majorMM = this.niceStep(targetPx / this.scale);
+    const minorMM = majorMM / 5;
+
+    const worldLeft = this.screenToWorld(0, 0).z;
+    const worldRight = this.screenToWorld(w, 0).z;
+    const worldTop = this.screenToWorld(0, 0).x;
+    const worldBottom = this.screenToWorld(0, h).x;
+
+    ctx.lineWidth = 1;
+    // minor grid
+    ctx.strokeStyle = getCSS("--grid-minor");
+    this._gridLines(worldLeft, worldRight, minorMM, true);
+    this._gridLines(worldBottom, worldTop, minorMM, false);
+    // major grid
+    ctx.strokeStyle = getCSS("--grid-major");
+    this._gridLines(worldLeft, worldRight, majorMM, true, true);
+    this._gridLines(worldBottom, worldTop, majorMM, false, true);
+
+    // axes
+    ctx.strokeStyle = getCSS("--axis");
+    ctx.lineWidth = 1.4;
+    const zero = this.worldToScreen(0, 0);
+    ctx.beginPath(); ctx.moveTo(0, zero.sy); ctx.lineTo(w, zero.sy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(zero.sx, 0); ctx.lineTo(zero.sx, h); ctx.stroke();
+  }
+  _gridLines(min, max, step, vertical, labelIt) {
+    const ctx = this.ctx;
+    const start = Math.floor(min / step) * step;
+    ctx.font = "10px monospace";
+    ctx.fillStyle = getCSS("--ink-soft");
+    for (let v = start; v <= max; v += step) {
+      if (vertical) {
+        const s = this.worldToScreen(0, v);
+        ctx.beginPath(); ctx.moveTo(s.sx, 0); ctx.lineTo(s.sx, this.canvas.height); ctx.stroke();
+        if (labelIt && Math.abs(v) > 1e-9) ctx.fillText(Math.round(v) + "", s.sx + 2, this.canvas.height - 4);
+      } else {
+        const s = this.worldToScreen(v, 0);
+        ctx.beginPath(); ctx.moveTo(0, s.sy); ctx.lineTo(this.canvas.width, s.sy); ctx.stroke();
+        if (labelIt && Math.abs(v) > 1e-9) ctx.fillText(Math.round(v) + "", 2, s.sy - 2);
+      }
+    }
+  }
+
+  drawComponent(comp, selected) {
+    const ctx = this.ctx;
+    const p = this.worldToScreen(comp.x, comp.z);
+    const halfHpx = (comp.height / 2) * this.scale;
+    ctx.save();
+    ctx.translate(p.sx, p.sy);
+
+    if (comp.type === "source") this._drawSource(ctx, halfHpx);
+    else if (comp.type === "lens") this._drawLens(ctx, comp, halfHpx);
+    else this._drawSink(ctx, halfHpx);
+
+    if (selected) {
+      ctx.strokeStyle = getCSS("--accent");
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(-16, -halfHpx - 8, 32, halfHpx * 2 + 16);
+      ctx.setLineDash([]);
+    }
+    ctx.restore();
+
+    // label
+    ctx.fillStyle = getCSS("--ink");
+    ctx.font = "11px sans-serif";
+    ctx.fillText(comp.name, p.sx + 10, p.sy - halfHpx - 10);
+  }
+  _drawSource(ctx, halfH) {
+    ctx.strokeStyle = getCSS("--ink"); ctx.fillStyle = "#5a6069";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, -halfH); ctx.lineTo(0, halfH); ctx.stroke();
+    // emitter triangle pointing +z
+    ctx.beginPath();
+    ctx.moveTo(0, -6); ctx.lineTo(12, 0); ctx.lineTo(0, 6); ctx.closePath();
+    ctx.fill();
+  }
+  _drawLens(ctx, comp, halfH) {
+    ctx.strokeStyle = getCSS("--ink"); ctx.lineWidth = 1.5;
+    const t = Math.max(comp.thickness * this.scale, 4);
+    const type = comp.lensType;
+    ctx.beginPath();
+    if (type === "Bi Convex") {
+      ctx.moveTo(-t, -halfH);
+      ctx.quadraticCurveTo(t * 2, 0, -t, halfH);
+      ctx.quadraticCurveTo(-t * 3, 0, -t, -halfH);
+    } else if (type === "Bi Concave") {
+      ctx.moveTo(-t, -halfH);
+      ctx.quadraticCurveTo(0, -halfH * 0.6, t, -halfH);
+      ctx.lineTo(t, halfH);
+      ctx.quadraticCurveTo(0, halfH * 0.6, -t, halfH);
+      ctx.closePath();
+    } else if (type === "Plano Convex") {
+      ctx.moveTo(0, -halfH);
+      ctx.lineTo(0, halfH);
+      ctx.quadraticCurveTo(t * 2, 0, 0, -halfH);
+    } else if (type === "Plano Concave") {
+      ctx.moveTo(0, -halfH);
+      ctx.lineTo(0, halfH);
+      ctx.lineTo(t, halfH);
+      ctx.quadraticCurveTo(0, 0, t, -halfH);
+      ctx.closePath();
+    } else if (type === "Positive Meniscus") {
+      ctx.moveTo(-t, -halfH);
+      ctx.quadraticCurveTo(t * 1.5, 0, -t, halfH);
+      ctx.quadraticCurveTo(0, 0, -t, -halfH);
+    } else if (type === "Negative Meniscus") {
+      ctx.moveTo(-t, -halfH);
+      ctx.quadraticCurveTo(t * 0.6, 0, -t, halfH);
+      ctx.quadraticCurveTo(t * 1.6, 0, -t, -halfH);
+    } else {
+      // Thin lens symbol: vertical line with arrowhead ticks
+      ctx.moveTo(0, -halfH); ctx.lineTo(0, halfH);
+      ctx.moveTo(-6, -halfH); ctx.lineTo(0, -halfH - 8); ctx.lineTo(6, -halfH);
+      ctx.moveTo(-6, halfH); ctx.lineTo(0, halfH + 8); ctx.lineTo(6, halfH);
+    }
+    ctx.stroke();
+  }
+  _drawSink(ctx, halfH) {
+    ctx.strokeStyle = getCSS("--ink"); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, -halfH); ctx.lineTo(0, halfH); ctx.stroke();
+    ctx.lineWidth = 1;
+    for (let i = -halfH; i <= halfH; i += 5) {
+      ctx.beginPath(); ctx.moveTo(-4, i); ctx.lineTo(4, i); ctx.stroke();
+    }
+  }
+
+  drawRayPath(ray, profile) {
+    if (!ray.path.length) return;
+    const ctx = this.ctx;
+    ctx.strokeStyle = rayColor(ray.fraction, profile);
+    ctx.lineWidth = 1.3;
+    ctx.beginPath();
+    const p0 = this.worldToScreen(ray.path[0].x, ray.path[0].z);
+    ctx.moveTo(p0.sx, p0.sy);
+    for (let i = 1; i < ray.path.length; i++) {
+      const p = this.worldToScreen(ray.path[i].x, ray.path[i].z);
+      ctx.lineTo(p.sx, p.sy);
+    }
+    ctx.stroke();
+    if (!ray.alive && ray.clipLocation) {
+      const p = this.worldToScreen(ray.clipLocation.x, ray.clipLocation.z);
+      ctx.fillStyle = getCSS("--danger");
+      ctx.beginPath(); ctx.arc(p.sx, p.sy, 3, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
+
+/* ---- ray color profiles -------------------------------------------------
+   fraction (t) is 0 at the lowest ray in a source's bundle and 1 at the
+   highest ray, evenly spaced in between for however many rays are configured. */
+const GRAY_LOW = [0x43, 0x47, 0x4d];   // darkest, bottom-most ray
+const GRAY_HIGH = [0xc3, 0xc8, 0xce];  // lightest, top-most ray
+const SPECTRUM_STOPS = ["#e53935", "#fb8c00", "#fdd835", "#43a047", "#1e88e5", "#8e24aa"]; // R O Y G B V
+
+function hexToRgb(hex) {
+  const n = parseInt(hex.replace("#", ""), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+function rgbToStr(rgb) { return `rgb(${rgb[0]|0},${rgb[1]|0},${rgb[2]|0})`; }
+function lerpRgb(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+
+function rayColor(fraction, profile) {
+  const t = Math.max(0, Math.min(1, isFinite(fraction) ? fraction : 0.5));
+  if (profile === "spectrum") {
+    const stops = SPECTRUM_STOPS.map(hexToRgb);
+    const s = 1 - t; // top (t=1) -> Red (first stop); bottom (t=0) -> Violet (last stop)
+    const pos = s * (stops.length - 1);
+    const i0 = Math.floor(pos), i1 = Math.min(i0 + 1, stops.length - 1);
+    return rgbToStr(lerpRgb(stops[i0], stops[i1], pos - i0));
+  }
+  return rgbToStr(lerpRgb(GRAY_LOW, GRAY_HIGH, t));
+}
+function getCSS(varName) {
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+
+/* =========================================================================
+   TOOLBAR
+   ========================================================================= */
+class Toolbar {
+  constructor(app) {
+    this.app = app;
+    document.querySelectorAll("#toolbar button[data-mode]").forEach(btn => {
+      btn.addEventListener("click", () => app.setMode(btn.dataset.mode));
+    });
+    document.getElementById("btnRun").addEventListener("click", () => app.runSimulation());
+    document.getElementById("btnSave").addEventListener("click", () => Serializer.download(app));
+    document.getElementById("btnLoad").addEventListener("click", () => document.getElementById("fileInput").click());
+    document.getElementById("btnFit").addEventListener("click", () => { app.view.fit(app.components); app.render(); });
+    document.getElementById("snapSelect").addEventListener("change", e => { app.snap = parseFloat(e.target.value); });
+    this.mediaIndexRoller = new RollerInput(app.mediaIndex, 0.01, val => {
+      app.mediaIndex = val;
+      app.runSimulation();
+      const disp = document.getElementById("fourierMediaIndexDisplay");
+      if (disp) disp.textContent = val.toFixed(3);
+    });
+    document.getElementById("mediaIndexWrap").appendChild(this.mediaIndexRoller.el);
+    document.getElementById("colorProfileSelect").addEventListener("change", e => { app.colorProfile = e.target.value; app.render(); });
+    document.getElementById("fileInput").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const obj = JSON.parse(reader.result);
+          Serializer.fromJSON(app, obj);
+        } catch (err) { alert("Invalid JSON file."); }
+      };
+      reader.readAsText(file);
+      e.target.value = "";
+    });
+  }
+  setActive(mode) {
+    document.querySelectorAll("#toolbar button[data-mode]").forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.mode === mode);
+    });
+    document.getElementById("statusMode").textContent = "Mode: " + mode[0].toUpperCase() + mode.slice(1);
+  }
+}
+
+/* =========================================================================
+   ROLLER INPUT  (roller dial number picker: drag-scrub, wheel, +/- buttons,
+   or click to type a value directly)
+   ========================================================================= */
+class RollerInput {
+  constructor(initialValue, step, onChange) {
+    this.value = initialValue;
+    this.step = step > 0 ? step : 1;
+    this.onChange = onChange;
+    this.editing = false;
+    this.editInput = null;
+    this.decimals = this._decimalsForStep(this.step);
+    this._build();
+  }
+  _decimalsForStep(step) {
+    if (!isFinite(step) || step <= 0) return 2;
+    if (step >= 1) return 0;
+    const s = step.toString();
+    const dot = s.indexOf(".");
+    return dot === -1 ? 0 : Math.min(6, s.length - dot - 1);
+  }
+  _build() {
+    this.el = document.createElement("div"); this.el.className = "roller-field";
+    this.decBtn = document.createElement("button");
+    this.decBtn.type = "button"; this.decBtn.className = "roller-btn"; this.decBtn.textContent = "\u2013";
+    this.valueEl = document.createElement("div"); this.valueEl.className = "roller-value";
+    this.incBtn = document.createElement("button");
+    this.incBtn.type = "button"; this.incBtn.className = "roller-btn"; this.incBtn.textContent = "+";
+    this.el.appendChild(this.decBtn); this.el.appendChild(this.valueEl); this.el.appendChild(this.incBtn);
+    this._renderValue();
+
+    this.decBtn.addEventListener("click", () => this.setValue(this.value - this.step));
+    this.incBtn.addEventListener("click", () => this.setValue(this.value + this.step));
+
+    this.valueEl.addEventListener("wheel", e => {
+      e.preventDefault();
+      this.setValue(this.value + (e.deltaY < 0 ? this.step : -this.step));
+    }, { passive: false });
+
+    this.valueEl.addEventListener("mousedown", e => {
+      if (this.editing) return;
+      e.preventDefault();
+      const startX = e.clientX, startVal = this.value;
+      let dragged = false;
+      const onMove = me => {
+        const dx = me.clientX - startX;
+        if (Math.abs(dx) > 3) { dragged = true; this.valueEl.classList.add("dragging"); }
+        const steps = Math.round(dx / 6);
+        this.setValue(startVal + steps * this.step);
+      };
+      const onUp = () => {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+        this.valueEl.classList.remove("dragging");
+        if (!dragged) this._enterEdit();
+      };
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    });
+  }
+  _enterEdit() {
+    this.editing = true;
+    this.valueEl.innerHTML = "";
+    const input = document.createElement("input");
+    input.type = "text"; input.value = this._formatted(this.value);
+    this.valueEl.appendChild(input);
+    this.editInput = input;
+    input.focus(); input.select();
+    const commit = () => {
+      const v = parseFloat(input.value);
+      this.editing = false;
+      this.editInput = null;
+      if (isFinite(v)) this.setValue(v); else this._renderValue();
+    };
+    input.addEventListener("blur", commit);
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") { e.preventDefault(); input.blur(); }
+      else if (e.key === "Escape") { e.preventDefault(); this.editing = false; this.editInput = null; this._renderValue(); }
+    });
+  }
+  _formatted(v) { return this.decimals > 0 ? v.toFixed(this.decimals) : String(Math.round(v)); }
+  _renderValue() { this.valueEl.textContent = this._formatted(this.value); }
+  setValue(v) {
+    this.value = parseFloat(v.toFixed(6));
+    if (this.editing && this.editInput) {
+      // keep the live input box in sync while the user is mid-edit (e.g. scrubbing
+      // or wheeling over the field while it still shows the text cursor)
+      this.editInput.value = this._formatted(this.value);
+    } else if (!this.editing) {
+      this._renderValue();
+    }
+    if (this.onChange) this.onChange(this.value);
+  }
+  setStep(step) {
+    this.step = step > 0 ? step : this.step;
+    this.decimals = this._decimalsForStep(this.step);
+    if (!this.editing) this._renderValue();
+  }
+}
+
+/* =========================================================================
+   PROPERTY DIALOG
+   ========================================================================= */
+class PropertyDialog {
+  constructor(app) {
+    this.app = app;
+    this.overlay = document.getElementById("modalOverlay");
+    this.modal = document.getElementById("modal");
+    this.body = document.getElementById("modalBody");
+    this.title = document.getElementById("modalTitle");
+    this.rollers = [];
+    this.pending = null;
+    document.getElementById("modalCancel").addEventListener("click", () => this.close());
+    document.getElementById("modalClose").addEventListener("click", () => this.close());
+    document.getElementById("modalSave").addEventListener("click", () => this.save());
+    document.getElementById("modalDelete").addEventListener("click", () => {
+      this.app.deleteComponent(this.comp);
+      this.close();
+    });
+    this._bindDrag();
+  }
+  _bindDrag() {
+    const handle = document.getElementById("modalDragHandle");
+    handle.addEventListener("mousedown", e => {
+      if (e.target.closest(".modal-close")) return;
+      const rect = this.modal.getBoundingClientRect();
+      const startX = e.clientX, startY = e.clientY;
+      const startLeft = rect.left, startTop = rect.top;
+      const onMove = me => {
+        this.modal.style.left = Math.max(0, startLeft + (me.clientX - startX)) + "px";
+        this.modal.style.top = Math.max(0, startTop + (me.clientY - startY)) + "px";
+      };
+      const onUp = () => {
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      };
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+      e.preventDefault();
+    });
+  }
+  fieldsFor(comp) {
+    const common = [
+      { key: "name", label: "Name", kind: "text" },
+      { key: "class", label: "Class", kind: "text" },
+      { key: "x", label: "X position (mm)", kind: "number" },
+      { key: "z", label: "Z position (mm)", kind: "number" },
+      { key: "height", label: "Height (mm)", kind: "number" },
+      { key: "thickness", label: "Thickness (mm)", kind: "number" }
+    ];
+    if (comp.type === "source") {
+      return common.concat([
+        { key: "beamWidth", label: "Beam width (mm)", kind: "number" },
+        { key: "pointing", label: "Pointing angle (deg)", kind: "number" },
+        { key: "divergence", label: "Divergence angle (deg)", kind: "number" },
+        { key: "rayCount", label: "Number of rays (1-99)", kind: "number" }
+      ]);
+    }
+    if (comp.type === "lens") {
+      return common.concat([
+        { key: "focalLength", label: "Focal length (mm)", kind: "number" },
+        { key: "lensType", label: "Lens type", kind: "select", options: LENS_TYPES },
+        { key: "refractiveIndex", label: "Index of refraction (n)", kind: "number" }
+      ]);
+    }
+    return common;
+  }
+  open(comp, atPoint) {
+    this.comp = comp;
+    this.pending = {};
+    this.rollers = [];
+    this.title.textContent = "Edit " + comp.type[0].toUpperCase() + comp.type.slice(1);
+    this.body.innerHTML = "";
+
+    for (const f of this.fieldsFor(comp)) {
+      const wrap = document.createElement("div"); wrap.className = "field";
+      const label = document.createElement("label"); label.textContent = f.label;
+      wrap.appendChild(label);
+
+      if (f.kind === "select") {
+        const input = document.createElement("select");
+        for (const opt of f.options) {
+          const o = document.createElement("option"); o.value = opt; o.textContent = opt;
+          if (comp[f.key] === opt) o.selected = true;
+          input.appendChild(o);
+        }
+        input.addEventListener("change", () => this._liveApply(f.key, input.value));
+        wrap.appendChild(input);
+      } else if (f.kind === "number") {
+        // Index of refraction is a dimensionless ratio (~1.0-3.0), not a spatial
+        // dimension, so it keeps its own fine fixed step rather than sharing the
+        // dialog's step size (which is normally set in whole/coarse mm units and
+        // would otherwise round n down to an integer).
+        const isIndexField = f.key === "refractiveIndex";
+        const step = isIndexField ? 0.01 : this.app.rollerStep;
+        const roller = new RollerInput(comp[f.key], step, val => this._liveApply(f.key, val));
+        if (!isIndexField) this.rollers.push(roller);
+        wrap.appendChild(roller.el);
+        if (f.key === "refractiveIndex") {
+          const calcRow = document.createElement("div");
+          calcRow.className = "field-row"; calcRow.style.marginTop = "3px";
+          const calcLabel = document.createElement("label");
+          calcLabel.textContent = "from relative permittivity \u03b5r ="; calcLabel.style.flex = "0 0 auto";
+          const epsInput = document.createElement("input");
+          epsInput.type = "text"; epsInput.placeholder = "\u03b5r"; epsInput.style.width = "56px";
+          const calcBtn = document.createElement("button");
+          calcBtn.type = "button"; calcBtn.className = "btn";
+          calcBtn.style.padding = "4px 8px"; calcBtn.style.fontSize = "11px";
+          calcBtn.textContent = "\u2192 n";
+          calcBtn.title = "n = \u221a\u03b5r (assumes non-magnetic material, \u03bcr = 1)";
+          calcBtn.addEventListener("click", () => {
+            const eps = parseFloat(epsInput.value);
+            if (isFinite(eps) && eps > 0) roller.setValue(Math.sqrt(eps));
+          });
+          calcRow.appendChild(calcLabel); calcRow.appendChild(epsInput); calcRow.appendChild(calcBtn);
+          wrap.appendChild(calcRow);
+        }
+      } else {
+        const input = document.createElement("input");
+        input.type = "text"; input.value = comp[f.key];
+        input.addEventListener("input", () => this._liveApply(f.key, input.value));
+        wrap.appendChild(input);
+      }
+      this.body.appendChild(wrap);
+    }
+
+    if (comp.type === "lens") {
+      const toolsWrap = document.createElement("div");
+      toolsWrap.className = "dialog-settings";
+      const toolsLabel = document.createElement("label");
+      toolsLabel.textContent = "Lens geometry tools";
+      toolsLabel.style.fontSize = "11px"; toolsLabel.style.color = "var(--ink-soft)";
+      toolsWrap.appendChild(toolsLabel);
+
+      const toolsRow = document.createElement("div");
+      toolsRow.style.display = "flex"; toolsRow.style.gap = "8px"; toolsRow.style.marginTop = "4px";
+
+      const reportBtn = document.createElement("button");
+      reportBtn.type = "button"; reportBtn.className = "btn"; reportBtn.style.flex = "1";
+      reportBtn.textContent = "Geometry Report";
+      reportBtn.title = "Download a tabulated text report of this lens's physical dimensions";
+      reportBtn.addEventListener("click", () => {
+        this._commitPending();
+        const safeName = (comp.name || "lens").replace(/[^A-Za-z0-9_-]/g, "_");
+        downloadTextFile(`${safeName}_geometry_report.txt`, buildGeometryReportText(comp));
+      });
+
+      const freecadBtn = document.createElement("button");
+      freecadBtn.type = "button"; freecadBtn.className = "btn"; freecadBtn.style.flex = "1";
+      freecadBtn.textContent = "Generate in FreeCAD";
+      freecadBtn.title = "Download a Python macro that builds this lens as a solid body in FreeCAD";
+      freecadBtn.addEventListener("click", () => {
+        this._commitPending();
+        const safeName = (comp.name || "lens").replace(/[^A-Za-z0-9_-]/g, "_");
+        downloadTextFile(`${safeName}_freecad_macro.FCMacro`, buildFreeCADMacro(comp));
+      });
+
+      toolsRow.appendChild(reportBtn); toolsRow.appendChild(freecadBtn);
+      toolsWrap.appendChild(toolsRow);
+      this.body.appendChild(toolsWrap);
+    }
+
+    // dialog-wide settings: shared step size for all number pickers, and
+    // whether edits recompute the simulation live.
+    const settings = document.createElement("div"); settings.className = "dialog-settings";
+
+    const stepWrap = document.createElement("div"); stepWrap.className = "field";
+    const stepLabel = document.createElement("label"); stepLabel.textContent = "Number picker step size";
+    const stepInput = document.createElement("input");
+    stepInput.type = "text"; stepInput.value = this.app.rollerStep;
+    stepInput.addEventListener("change", () => {
+      const v = parseFloat(stepInput.value);
+      if (isFinite(v) && v > 0) {
+        this.app.rollerStep = v;
+        this.rollers.forEach(r => r.setStep(v));
+      } else {
+        stepInput.value = this.app.rollerStep;
+      }
+    });
+    stepWrap.appendChild(stepLabel); stepWrap.appendChild(stepInput);
+    settings.appendChild(stepWrap);
+
+    const recomputeRow = document.createElement("div"); recomputeRow.className = "field-row";
+    const recomputeLabel = document.createElement("label");
+    recomputeLabel.textContent = "Recompute on change (interactive tuning)";
+    recomputeLabel.htmlFor = "recomputeOnChangeBox";
+    const recomputeBox = document.createElement("input");
+    recomputeBox.type = "checkbox"; recomputeBox.id = "recomputeOnChangeBox";
+    recomputeBox.checked = this.app.recomputeOnChange;
+    recomputeBox.addEventListener("change", () => { this.app.recomputeOnChange = recomputeBox.checked; });
+    recomputeRow.appendChild(recomputeLabel); recomputeRow.appendChild(recomputeBox);
+    settings.appendChild(recomputeRow);
+
+    this.body.appendChild(settings);
+
+    this.overlay.classList.add("show");
+    this._positionAt(atPoint);
+  }
+  _positionAt(pt) {
+    const modal = this.modal;
+    const w = modal.getBoundingClientRect().width || 320;
+    let left = pt ? pt.x + 16 : (window.innerWidth - w) / 2;
+    let top = pt ? pt.y - 20 : (window.innerHeight - 320) / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - 260));
+    top = Math.max(8, Math.min(top, window.innerHeight - 120));
+    modal.style.left = left + "px";
+    modal.style.top = top + "px";
+  }
+  _liveApply(key, rawValue) {
+    if (!this.comp) return;
+    this.pending[key] = rawValue;
+    if (this.app.recomputeOnChange) {
+      this._commitPending();
+      this.app.runSimulation();
+    }
+  }
+  _commitPending() {
+    if (!this.comp || !this.pending) return;
+    for (const key in this.pending) this.comp[key] = this.pending[key];
+    this.comp.clamp();
+    this.pending = {};
+  }
+  close() { this.overlay.classList.remove("show"); this.comp = null; this.pending = null; this.rollers = []; }
+  save() {
+    if (!this.comp) return;
+    this._commitPending();
+    this.app.runSimulation();
+    this.close();
+    this.app.render();
+  }
+}
+
+/* =========================================================================
+   FOURIER OPTICS  —  1D angular-spectrum split-step beam propagation (BPM)
+   ========================================================================= */
+
+function isPow2(n) { return n > 0 && (n & (n - 1)) === 0; }
+
+// thrown by FourierEngine.run() to unwind cleanly when the user hits Cancel mid-computation
+class FourierCancelledError extends Error {
+  constructor() { super("Calculation cancelled."); this.name = "FourierCancelledError"; }
+}
+
+// In-place iterative radix-2 Cooley-Tukey FFT. re/im are Float64Array of length N (power of 2).
+function fftRadix2(re, im, invert) {
+  const N = re.length;
+  for (let i = 1, j = 0; i < N; i++) {
+    let bit = N >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      let t = re[i]; re[i] = re[j]; re[j] = t;
+      t = im[i]; im[i] = im[j]; im[j] = t;
+    }
+  }
+  for (let len = 2; len <= N; len <<= 1) {
+    const ang = (invert ? 1 : -1) * 2 * Math.PI / len;
+    const wr = Math.cos(ang), wi = Math.sin(ang);
+    for (let i = 0; i < N; i += len) {
+      let curWr = 1, curWi = 0;
+      for (let j = 0; j < len / 2; j++) {
+        const ur = re[i + j], ui = im[i + j];
+        const vr = re[i + j + len / 2] * curWr - im[i + j + len / 2] * curWi;
+        const vi = re[i + j + len / 2] * curWi + im[i + j + len / 2] * curWr;
+        re[i + j] = ur + vr; im[i + j] = ui + vi;
+        re[i + j + len / 2] = ur - vr; im[i + j + len / 2] = ui - vi;
+        const nwr = curWr * wr - curWi * wi;
+        const nwi = curWr * wi + curWi * wr;
+        curWr = nwr; curWi = nwi;
+      }
+    }
+  }
+  if (invert) { for (let i = 0; i < N; i++) { re[i] /= N; im[i] /= N; } }
+}
+
+function buildKxArray(N, dx) {
+  const kx = new Float64Array(N);
+  for (let j = 0; j < N; j++) {
+    const idx = j < N / 2 ? j : j - N;
+    kx[j] = 2 * Math.PI * idx / (N * dx);
+  }
+  return kx;
+}
+
+// Phase unwrap anchored at the peak-amplitude sample, walking outward in both directions.
+// A naive sequential (left-to-right, index 0) unwrap lets numerical noise in near-zero-amplitude
+// tail regions (where phase is essentially undefined) inject large spurious 2*pi jumps that then
+// propagate as a constant offset into the physically meaningful high-amplitude region. Anchoring
+// at the peak keeps that region correct regardless of what the noisy far tails do.
+function unwrapPhase(phase, amplitude) {
+  const n = phase.length;
+  const out = new Float64Array(n);
+  if (!n) return out;
+  let peakIdx = 0, peakVal = -Infinity;
+  if (amplitude) {
+    for (let i = 0; i < n; i++) if (amplitude[i] > peakVal) { peakVal = amplitude[i]; peakIdx = i; }
+  }
+  out[peakIdx] = phase[peakIdx];
+  let offset = 0;
+  for (let i = peakIdx + 1; i < n; i++) {
+    let diff = phase[i] - phase[i - 1];
+    while (diff > Math.PI) { offset -= 2 * Math.PI; diff -= 2 * Math.PI; }
+    while (diff < -Math.PI) { offset += 2 * Math.PI; diff += 2 * Math.PI; }
+    out[i] = phase[i] + offset;
+  }
+  offset = 0;
+  for (let i = peakIdx - 1; i >= 0; i--) {
+    let diff = phase[i] - phase[i + 1];
+    while (diff > Math.PI) { offset -= 2 * Math.PI; diff -= 2 * Math.PI; }
+    while (diff < -Math.PI) { offset += 2 * Math.PI; diff += 2 * Math.PI; }
+    out[i] = phase[i] + offset;
+  }
+  return out;
+}
+
+// angular-spectrum free-space propagation over distance dz, in place, using reference wavenumber k0n0
+function propagateFreeSpace(re, im, dz, k0n0, kx) {
+  fftRadix2(re, im, false);
+  const N = re.length;
+  for (let j = 0; j < N; j++) {
+    const kxx = kx[j];
+    const under = k0n0 * k0n0 - kxx * kxx;
+    let pr, pi;
+    if (under >= 0) {
+      const kz = Math.sqrt(under);
+      pr = Math.cos(kz * dz); pi = Math.sin(kz * dz);
+    } else {
+      const decay = Math.exp(-Math.sqrt(-under) * dz);
+      pr = decay; pi = 0;
+    }
+    const rr = re[j] * pr - im[j] * pi;
+    const ii = re[j] * pi + im[j] * pr;
+    re[j] = rr; im[j] = ii;
+  }
+  fftRadix2(re, im, true);
+}
+
+class FourierEngine {
+  // build the complex field at the source plane from the ray-model source's parameters
+  static buildInitialField(source, xGrid, wavelengthMm, sourceFunction) {
+    const N = xGrid.length;
+    const re = new Float64Array(N), im = new Float64Array(N);
+    const w = Math.max(source.beamWidth, 1e-9);
+    const halfW = w / 2;
+    const k0 = 2 * Math.PI / wavelengthMm;
+    const pointingRad = source.pointing * Math.PI / 180;
+    const divergenceRad = source.divergence * Math.PI / 180;
+    // local ray angle varies linearly across the aperture (matches the ray-trace's
+    // top/bottom divergence split): theta(x) = pointingRad + slope*x. The transverse
+    // wavevector of a plane-wave component tilted by theta is exactly k0*sin(theta), so
+    // integrating k0*sin(theta(x)) dx gives a closed form (no small-angle approximation):
+    //   phase(x) = (k0/slope) * [cos(pointingRad) - cos(theta(x))]
+    // which reduces to the earlier linear-tilt + quadratic-curvature formula for small angles.
+    const slope = divergenceRad / w;
+    const smallDivergence = Math.abs(divergenceRad) < 1e-9;
+    for (let i = 0; i < N; i++) {
+      const xRel = xGrid[i] - source.x;
+      let amp = 0;
+      if (sourceFunction === "boxcar") {
+        amp = Math.abs(xRel) <= halfW ? 1 : 0;
+      } else if (sourceFunction === "triangular") {
+        amp = Math.max(0, 1 - Math.abs(xRel) / halfW);
+      } else { // gaussian (default): beamWidth/2 treated as the 1/e amplitude half-width
+        amp = Math.exp(-(xRel * xRel) / (halfW * halfW));
+      }
+      let phase;
+      if (smallDivergence) {
+        phase = k0 * Math.sin(pointingRad) * xRel; // pure tilt, no curvature term to divide by
+      } else {
+        const thetaEdge = pointingRad + slope * xRel;
+        phase = (k0 / slope) * (Math.cos(pointingRad) - Math.cos(thetaEdge));
+      }
+      re[i] = amp * Math.cos(phase);
+      im[i] = amp * Math.sin(phase);
+    }
+    return { re, im };
+  }
+
+  // sample which lenses (with real physical geometry) are glass at (xLocal, z), else background
+  static glassIndexAt(lensCache, xGrid, zMid, mediaIndex) {
+    const N = xGrid.length;
+    const n = new Float64Array(N).fill(mediaIndex);
+    for (const lc of lensCache) {
+      if (!lc.physical) continue;
+      if (zMid < lc.zSpanMin || zMid > lc.zSpanMax) continue;
+      const halfD = lc.diameter / 2;
+      for (let i = 0; i < N; i++) {
+        const xLocal = xGrid[i] - lc.x;
+        const ax = Math.abs(xLocal);
+        if (ax > halfD) continue;
+        const s1 = sagSigned(lc.R1, ax);
+        const s2 = sagSigned(lc.R2, ax);
+        if (s1 === null || s2 === null) continue;
+        const zFront = lc.z - lc.halfCT + s1;
+        const zBack = lc.z + lc.halfCT + s2;
+        if (zMid >= zFront && zMid <= zBack) n[i] = lc.index;
+      }
+    }
+    return n;
+  }
+
+  static async run(cfg, onProgress, cancelToken) {
+    const { source, sink, lenses, wavelengthMm, mediaIndex, fftSize, boxHeightMm, stepMm, sourceFunction } = cfg;
+    const N = fftSize;
+    const dx = boxHeightMm / N;
+    const xGrid = new Float64Array(N);
+    for (let i = 0; i < N; i++) xGrid[i] = (i - N / 2) * dx;
+    const kx = buildKxArray(N, dx);
+    const k0 = 2 * Math.PI / wavelengthMm;
+    const k0n0 = k0 * mediaIndex;
+
+    // cache each lens's geometry once
+    const lensCache = lenses.map(lens => {
+      const g = lens.computeGeometry();
+      const halfCT = lens.thickness / 2;
+      const physical = !!g.physical && g.sag1 !== null && g.sag2 !== null && g.sag1 !== undefined && g.sag2 !== undefined;
+      const maxSag = physical ? Math.max(Math.abs(g.sag1), Math.abs(g.sag2)) : 0;
+      return {
+        id: lens.id, name: lens.name, x: lens.x, z: lens.z, height: lens.height, diameter: lens.height,
+        physical, thin: lens.lensType === "Thin",
+        focalLength: lens.focalLength,
+        index: lens.refractiveIndex,
+        halfCT,
+        R1: physical ? g.R1 : Infinity,
+        R2: physical ? g.R2 : Infinity,
+        zSpanMin: lens.z - halfCT - maxSag - 1e-6,
+        zSpanMax: lens.z + halfCT + maxSag + 1e-6
+      };
+    });
+
+    const { re, im } = FourierEngine.buildInitialField(source, xGrid, wavelengthMm, sourceFunction);
+    const sourceRe = re.slice(), sourceIm = im.slice();
+
+    const totalDist = sink.z - source.z;
+    if (totalDist <= 0) throw new Error("Sink must be downstream of the source (sink z > source z).");
+    if (cancelToken && cancelToken.cancelled) throw new FourierCancelledError();
+    const totalSteps = Math.max(1, Math.ceil(totalDist / stepMm));
+    const appliedThinLens = new Set();
+    const appliedAperture = new Set();
+
+    let z = source.z;
+    let lastYield = Date.now();
+
+    for (let s = 0; s < totalSteps; s++) {
+      const dz = Math.min(stepMm, sink.z - z);
+      const zStart = z, zEnd = z + dz, zMid = z + dz / 2;
+
+      propagateFreeSpace(re, im, dz / 2, k0n0, kx);
+
+      // physical (meshed) lens material: local index-contrast phase correction
+      const nProfile = FourierEngine.glassIndexAt(lensCache, xGrid, zMid, mediaIndex);
+      for (let i = 0; i < N; i++) {
+        const dPhi = k0 * (nProfile[i] - mediaIndex) * dz;
+        if (dPhi !== 0) {
+          const c = Math.cos(dPhi), sN = Math.sin(dPhi);
+          const rr = re[i] * c - im[i] * sN;
+          const ii = re[i] * sN + im[i] * c;
+          re[i] = rr; im[i] = ii;
+        }
+      }
+
+      // idealized Thin lenses: apply the same zero-thickness phase screen the ray-trace uses,
+      // the instant the march crosses that lens's z position
+      for (const lc of lensCache) {
+        if (!lc.thin || appliedThinLens.has(lc.id)) continue;
+        if (lc.z >= zStart && lc.z < zEnd) {
+          for (let i = 0; i < N; i++) {
+            const xRel = xGrid[i] - lc.x;
+            const dPhi = -k0 * (xRel * xRel) / (2 * lc.focalLength);
+            const c = Math.cos(dPhi), sN = Math.sin(dPhi);
+            const rr = re[i] * c - im[i] * sN;
+            const ii = re[i] * sN + im[i] * c;
+            re[i] = rr; im[i] = ii;
+          }
+          appliedThinLens.add(lc.id);
+        }
+      }
+
+      // hard aperture stop: every lens's mechanical mount blocks light outside its clear aperture,
+      // applied once at the step where the march crosses that lens's reference plane
+      for (const lc of lensCache) {
+        if (appliedAperture.has(lc.id)) continue;
+        if (lc.z >= zStart && lc.z < zEnd) {
+          const halfD = lc.height / 2;
+          for (let i = 0; i < N; i++) {
+            if (Math.abs(xGrid[i] - lc.x) > halfD) { re[i] = 0; im[i] = 0; }
+          }
+          appliedAperture.add(lc.id);
+        }
+      }
+
+      propagateFreeSpace(re, im, dz / 2, k0n0, kx);
+
+      z = zEnd;
+      const now = Date.now();
+      if (now - lastYield > 40 || s === totalSteps - 1) {
+        onProgress((s + 1) / totalSteps, z, totalSteps, s + 1);
+        await new Promise(r => setTimeout(r, 0));
+        lastYield = Date.now();
+        if (cancelToken && cancelToken.cancelled) throw new FourierCancelledError();
+      }
+    }
+
+    function amplitudeAndPhase(reArr, imArr) {
+      const amp = new Float64Array(N), rawPhase = new Float64Array(N);
+      for (let i = 0; i < N; i++) { amp[i] = Math.hypot(reArr[i], imArr[i]); rawPhase[i] = Math.atan2(imArr[i], reArr[i]); }
+      return { amplitude: amp, phaseUnwrapped: unwrapPhase(rawPhase, amp) };
+    }
+    const srcAP = amplitudeAndPhase(sourceRe, sourceIm);
+    const sinkAP = amplitudeAndPhase(re, im);
+
+    return {
+      xGridMm: Array.from(xGrid), dxMm: dx, wavelengthMm, mediaIndex, fftSize: N, boxHeightMm, stepMm,
+      source: { re: Array.from(sourceRe), im: Array.from(sourceIm), amplitude: Array.from(srcAP.amplitude), phaseUnwrapped: Array.from(srcAP.phaseUnwrapped) },
+      sink: { re: Array.from(re), im: Array.from(im), amplitude: Array.from(sinkAP.amplitude), phaseUnwrapped: Array.from(sinkAP.phaseUnwrapped) },
+      meta: {
+        sourceId: source.id, sourceName: source.name, sinkId: sink.id, sinkName: sink.name,
+        lensesTraversed: lensCache.map(lc => ({ id: lc.id, name: lc.name, physical: lc.physical, thin: lc.thin }))
+      }
+    };
+  }
+}
+
+// minimal canvas line-chart helper, styled to match the app's engineering-gray theme
+function drawLineChart(canvas, xVals, yVals, opts) {
+  opts = opts || {};
+  const ctx = canvas.getContext("2d");
+  const cssWidth = canvas.clientWidth || 400;
+  const cssHeight = canvas.clientHeight || 160;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = cssWidth * dpr; canvas.height = cssHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const W = cssWidth, H = cssHeight;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#fbfbfc"; ctx.fillRect(0, 0, W, H);
+
+  const padL = 40, padR = 8, padT = 8, padB = 20;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const n = xVals.length;
+  if (!n) return;
+  let xMin = xVals[0], xMax = xVals[n - 1];
+  let yMin = Infinity, yMax = -Infinity;
+  for (let i = 0; i < n; i++) { if (yVals[i] < yMin) yMin = yVals[i]; if (yVals[i] > yMax) yMax = yVals[i]; }
+  if (yMin === yMax) { yMin -= 1; yMax += 1; }
+  const yPad = (yMax - yMin) * 0.08;
+  yMin -= yPad; yMax += yPad;
+
+  const sx = v => padL + ((v - xMin) / (xMax - xMin || 1)) * plotW;
+  const sy = v => padT + plotH - ((v - yMin) / (yMax - yMin || 1)) * plotH;
+
+  // gridlines
+  ctx.strokeStyle = "#e2e4e7"; ctx.lineWidth = 1;
+  for (let g = 0; g <= 4; g++) {
+    const yy = padT + (g / 4) * plotH;
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W - padR, yy); ctx.stroke();
+  }
+  // axes
+  ctx.strokeStyle = "#8a8f96"; ctx.lineWidth = 1;
+  ctx.strokeRect(padL, padT, plotW, plotH);
+
+  // labels
+  ctx.fillStyle = "#5a6069"; ctx.font = "9px monospace"; ctx.textAlign = "right";
+  ctx.fillText(yMax.toPrecision(3), padL - 4, padT + 8);
+  ctx.fillText(yMin.toPrecision(3), padL - 4, padT + plotH);
+  ctx.textAlign = "center";
+  ctx.fillText(xMin.toPrecision(3), padL, H - 6);
+  ctx.fillText(xMax.toPrecision(3), W - padR, H - 6);
+
+  // curve
+  ctx.strokeStyle = opts.color || "#3767a6"; ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const px = sx(xVals[i]), py = sy(yVals[i]);
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+}
+
+// human-readable duration for the Fourier progress bar's ETA
+function formatDuration(ms) {
+  if (!isFinite(ms) || ms < 0) return "--";
+  const totalSec = Math.round(ms / 1000);
+  if (totalSec < 1) return "<1s";
+  if (totalSec < 60) return totalSec + "s";
+  const m = Math.floor(totalSec / 60), s = totalSec % 60;
+  return m + "m " + s + "s";
+}
+
+class FourierDialog {
+  constructor(app) {
+    this.app = app;
+    this.overlay = document.getElementById("fourierOverlay");
+    this.panel = document.getElementById("fourierPanel");
+    this.running = false;
+    this.lastResults = null;
+    this.cancelToken = null;
+
+    document.getElementById("btnFourier").addEventListener("click", () => this.open());
+    document.getElementById("fourierClose").addEventListener("click", () => this.close());
+    document.getElementById("fourierCancel").addEventListener("click", () => this.close());
+    document.getElementById("fourierStop").addEventListener("click", () => this._requestCancel());
+    document.getElementById("fourierCalculate").addEventListener("click", () => this.calculate());
+    document.getElementById("fourierAutoHeight").addEventListener("click", () => this._autoHeight());
+    document.getElementById("fourierDownload").addEventListener("click", () => this._downloadResults());
+    this._bindDrag();
+    this._buildRollers();
+  }
+  _bindDrag() {
+    const handle = document.getElementById("fourierDragHandle");
+    handle.addEventListener("mousedown", e => {
+      if (e.target.closest(".modal-close")) return;
+      const rect = this.panel.getBoundingClientRect();
+      const startX = e.clientX, startY = e.clientY, startLeft = rect.left, startTop = rect.top;
+      const onMove = me => {
+        this.panel.style.left = Math.max(0, startLeft + (me.clientX - startX)) + "px";
+        this.panel.style.top = Math.max(0, startTop + (me.clientY - startY)) + "px";
+      };
+      const onUp = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+      window.addEventListener("mousemove", onMove); window.addEventListener("mouseup", onUp);
+      e.preventDefault();
+    });
+  }
+  _buildRollers() {
+    this.wavelengthRoller = new RollerInput(1550, 10, () => {});
+    document.getElementById("fourierWavelengthWrap").appendChild(this.wavelengthRoller.el);
+    this.boxHeightRoller = new RollerInput(40, 1, () => {});
+    document.getElementById("fourierBoxHeightWrap").appendChild(this.boxHeightRoller.el);
+    this.stepRoller = new RollerInput(10, 1, () => {});
+    document.getElementById("fourierStepWrap").appendChild(this.stepRoller.el);
+  }
+  open() {
+    const srcSel = document.getElementById("fourierSourceSelect");
+    const sinkSel = document.getElementById("fourierSinkSelect");
+    const sources = this.app.components.filter(c => c.type === "source");
+    const sinks = this.app.components.filter(c => c.type === "sink");
+    srcSel.innerHTML = sources.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (z=${s.z})</option>`).join("");
+    sinkSel.innerHTML = sinks.map(s => `<option value="${s.id}">${escapeHtml(s.name)} (z=${s.z})</option>`).join("");
+    if (!sources.length || !sinks.length) {
+      this._showError("This design needs at least one Source and one Sink before running a Fourier calculation.");
+    } else {
+      this._showError(null);
+    }
+    document.getElementById("fourierProgressWrap").classList.remove("show");
+    document.getElementById("fourierPlots").classList.remove("show");
+    document.getElementById("fourierDownload").style.display = "none";
+    document.getElementById("fourierMediaIndexDisplay").textContent = this.app.mediaIndex.toFixed(3);
+    this.overlay.classList.add("show");
+    if (!this.panel.style.left) {
+      this.panel.style.left = Math.max(20, (window.innerWidth - 460) / 2) + "px";
+      this.panel.style.top = Math.max(20, (window.innerHeight - 500) / 2) + "px";
+    }
+  }
+  close() { if (!this.running) this.overlay.classList.remove("show"); }
+  _showError(msg) {
+    const el = document.getElementById("fourierError");
+    if (msg) { el.textContent = msg; el.classList.add("show"); } else { el.classList.remove("show"); }
+  }
+  _autoHeight() {
+    const sources = this.app.components.filter(c => c.type === "source");
+    const sinks = this.app.components.filter(c => c.type === "sink");
+    const pool = (sources.length && sinks.length) ? this.app.components : this.app.components;
+    const maxH = pool.length ? Math.max(...pool.map(c => c.height)) : 20;
+    this.boxHeightRoller.setValue(Math.max(1, maxH * 2));
+  }
+  async calculate() {
+    if (this.running) return;
+    const srcId = document.getElementById("fourierSourceSelect").value;
+    const sinkId = document.getElementById("fourierSinkSelect").value;
+    const source = this.app.components.find(c => c.id === srcId && c.type === "source");
+    const sink = this.app.components.find(c => c.id === sinkId && c.type === "sink");
+    if (!source || !sink) { this._showError("Choose a source and a sink first."); return; }
+    if (sink.z <= source.z) { this._showError("Sink must be downstream of the source (sink z > source z)."); return; }
+
+    const lenses = this.app.components.filter(c => c.type === "lens" && c.z > source.z && c.z < sink.z).sort((a, b) => a.z - b.z);
+    const fftSize = parseInt(document.getElementById("fourierFftSize").value, 10);
+    const wavelengthMm = this.wavelengthRoller.value * 1e-6; // nm -> mm
+    const boxHeightMm = this.boxHeightRoller.value;
+    const stepMm = this.stepRoller.value * 1e-3; // um -> mm
+    const mediaIndex = this.app.mediaIndex;
+    const sourceFunction = document.getElementById("fourierSourceFunc").value;
+
+    if (!isPow2(fftSize)) { this._showError("FFT size must be a power of two."); return; }
+    if (!(boxHeightMm > 0) || !(stepMm > 0) || !(wavelengthMm > 0) || !(mediaIndex > 0)) {
+      this._showError("All numeric parameters must be positive."); return;
+    }
+    this._showError(null);
+
+    this.running = true;
+    this.cancelToken = { cancelled: false };
+    document.getElementById("fourierCalculate").style.display = "none";
+    document.getElementById("fourierCancel").disabled = true;
+    document.getElementById("fourierStop").style.display = "";
+    document.getElementById("fourierStop").disabled = false;
+    document.getElementById("fourierStop").textContent = "Cancel";
+    document.getElementById("fourierProgressWrap").classList.add("show");
+    document.getElementById("fourierPlots").classList.remove("show");
+    document.getElementById("fourierProgressFill").style.width = "0%";
+    document.getElementById("fourierStatusText").textContent = "Starting...";
+
+    const startTime = Date.now();
+    try {
+      const results = await FourierEngine.run(
+        { source, sink, lenses, wavelengthMm, mediaIndex, fftSize, boxHeightMm, stepMm, sourceFunction },
+        (frac, zNow, totalSteps, stepNow) => {
+          document.getElementById("fourierProgressFill").style.width = (frac * 100).toFixed(1) + "%";
+          const elapsed = Date.now() - startTime;
+          // wait for a small amount of progress/time before trusting the linear extrapolation,
+          // so the first callback or two don't flash a wild, meaningless estimate
+          let etaText = "";
+          if (frac > 0 && frac < 1 && elapsed > 400 && frac > 0.01) {
+            const remainingMs = elapsed * (1 - frac) / frac;
+            etaText = ` \u2014 est. ${formatDuration(remainingMs)} remaining`;
+          }
+          document.getElementById("fourierStatusText").textContent =
+            `Step ${stepNow}/${totalSteps} \u2014 z = ${zNow.toFixed(3)} mm${etaText}`;
+        },
+        this.cancelToken
+      );
+      this.lastResults = results;
+      this._renderPlots(results);
+      document.getElementById("fourierDownload").style.display = "";
+      document.getElementById("fourierStatusText").textContent = "Done.";
+    } catch (err) {
+      if (err instanceof FourierCancelledError) {
+        document.getElementById("fourierStatusText").textContent = "Cancelled.";
+        document.getElementById("fourierProgressWrap").classList.remove("show");
+      } else {
+        this._showError("Calculation failed: " + err.message);
+        document.getElementById("fourierProgressWrap").classList.remove("show");
+      }
+    } finally {
+      this.running = false;
+      this.cancelToken = null;
+      document.getElementById("fourierCalculate").style.display = "";
+      document.getElementById("fourierCalculate").disabled = false;
+      document.getElementById("fourierCancel").disabled = false;
+      document.getElementById("fourierStop").style.display = "none";
+    }
+  }
+  _requestCancel() {
+    if (!this.running || !this.cancelToken) return;
+    this.cancelToken.cancelled = true;
+    document.getElementById("fourierStop").disabled = true;
+    document.getElementById("fourierStop").textContent = "Cancelling...";
+    document.getElementById("fourierStatusText").textContent = "Cancelling...";
+  }
+  _renderPlots(results) {
+    document.getElementById("fourierPlots").classList.add("show");
+    drawLineChart(document.getElementById("plotSrcAmp"), results.xGridMm, results.source.amplitude, { color: "#3767a6" });
+    drawLineChart(document.getElementById("plotSrcPhase"), results.xGridMm, results.source.phaseUnwrapped, { color: "#a63737" });
+    drawLineChart(document.getElementById("plotSinkAmp"), results.xGridMm, results.sink.amplitude, { color: "#3767a6" });
+    drawLineChart(document.getElementById("plotSinkPhase"), results.xGridMm, results.sink.phaseUnwrapped, { color: "#a63737" });
+  }
+  _downloadResults() {
+    if (!this.lastResults) return;
+    downloadTextFile("results.json", JSON.stringify(this.lastResults, null, 1));
+  }
+}
+
+/* =========================================================================
+   APPLICATION
+   ========================================================================= */
+class HelpDialog {
+  constructor(app) {
+    this.overlay = document.getElementById("helpOverlay");
+    this.panel = document.getElementById("helpPanel");
+    document.getElementById("btnHelp").addEventListener("click", () => this.open());
+    document.getElementById("helpClose").addEventListener("click", () => this.close());
+    document.getElementById("helpCloseBtn").addEventListener("click", () => this.close());
+    this._bindDrag();
+  }
+  _bindDrag() {
+    const handle = document.getElementById("helpDragHandle");
+    handle.addEventListener("mousedown", e => {
+      if (e.target.closest(".modal-close")) return;
+      const rect = this.panel.getBoundingClientRect();
+      const startX = e.clientX, startY = e.clientY, startLeft = rect.left, startTop = rect.top;
+      const onMove = me => {
+        this.panel.style.left = Math.max(0, startLeft + (me.clientX - startX)) + "px";
+        this.panel.style.top = Math.max(0, startTop + (me.clientY - startY)) + "px";
+      };
+      const onUp = () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+      window.addEventListener("mousemove", onMove); window.addEventListener("mouseup", onUp);
+      e.preventDefault();
+    });
+  }
+  open() { this.overlay.classList.add("show"); }
+  close() { this.overlay.classList.remove("show"); }
+}
+
+class Application {
+  constructor() {
+    this.mediaIndex = 1; // global background/ambient refractive index, used by ray-trace lens matrices and the Fourier calc
+    this.canvas = document.getElementById("canvas");
+    this.view = new CanvasView(this.canvas);
+    this.toolbar = new Toolbar(this);
+    this.dialog = new PropertyDialog(this);
+    this.fourierDialog = new FourierDialog(this);
+    this.helpDialog = new HelpDialog(this);
+    this.engine = new SimulationEngine(this);
+
+    this.components = [];
+    this.selected = null;
+    this.mode = "select";
+    this.snap = 5;
+    this.lastSimResult = null;
+    this.rollerStep = 1;            // shared step size for property-dialog roller pickers
+    this.recomputeOnChange = true;  // if true, dialog edits resimulate live before Save
+    this.colorProfile = "grayscale"; // 'grayscale' | 'spectrum'
+
+    this.dragging = null;   // {comp, startMouse, startCompPos}
+    this.panning = null;
+
+    this.toolbar.setActive("select");
+    this._bindEvents();
+    this._bindSideResizer();
+    window.addEventListener("resize", () => { this.view.resize(); this.render(); });
+    this._seedExample();
+    this.runSimulation();
+    this.view.fit(this.components);
+    this.render();
+  }
+
+  _seedExample() {
+    const src = new Source(0, 0);
+    src.name = "HeNe Laser"; src.beamWidth = 6; src.divergence = 2;
+    const lens = new Lens(0, 150);
+    lens.name = "Focusing Lens"; lens.focalLength = 100; lens.lensType = "Plano Convex"; lens.height = 25;
+    const sink = new Sink(0, 300);
+    sink.name = "Detector"; sink.height = 40;
+    this.components.push(src, lens, sink);
+  }
+
+  setMode(mode) { this.mode = mode; this.toolbar.setActive(mode); }
+
+  snapVal(v) { return Math.round(v / this.snap) * this.snap; }
+
+  runSimulation() {
+    this.lastSimResult = this.engine.run(this.components);
+    this.updateSidePanel();
+    this.render();
+  }
+
+  deleteComponent(comp) {
+    this.components = this.components.filter(c => c !== comp);
+    if (this.selected === comp) this.selected = null;
+    this.runSimulation();
+  }
+
+  duplicateComponent(comp) {
+    const copy = componentFromJSON(comp.toJSON());
+    copy.id = nextId(copy.type);
+    copy.name = comp.name + " copy";
+    copy.z = comp.z + this.snap * 2;
+    this.components.push(copy);
+    this.selected = copy;
+    this.runSimulation();
+  }
+
+  hitTest(worldX, worldZ) {
+    const scale = this.view.scale;
+    let best = null, bestDist = Infinity;
+    for (const c of this.components) {
+      const dz = (c.z - worldZ) * scale;
+      const dx = (c.x - worldX) * scale;
+      const halfH = (c.height / 2) * scale + 10;
+      if (Math.abs(dz) < 16 && Math.abs(dx) < halfH) {
+        const dist = Math.hypot(dz, dx);
+        if (dist < bestDist) { bestDist = dist; best = c; }
+      }
+    }
+    return best;
+  }
+
+  _bindEvents() {
+    const canvas = this.canvas;
+    canvas.addEventListener("wheel", e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const before = this.view.screenToWorld(mx, my);
+      const factor = Math.pow(1.0015, -e.deltaY);
+      this.view.zoom = Math.max(0.02, Math.min(200, this.view.zoom * factor));
+      const after = this.view.worldToScreen(before.x, before.z);
+      this.view.panX += mx - after.sx;
+      this.view.panY += my - after.sy;
+      this.render();
+    }, { passive: false });
+
+    canvas.addEventListener("mousedown", e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      if (e.button === 1) {
+        this.panning = { startX: mx, startY: my, startPanX: this.view.panX, startPanY: this.view.panY };
+        e.preventDefault();
+        return;
+      }
+      if (e.button !== 0) return;
+      const world = this.view.screenToWorld(mx, my);
+
+      if (this.mode === "select") {
+        const hit = this.hitTest(world.x, world.z);
+        this.selected = hit;
+        if (hit) {
+          this.dragging = { comp: hit, startMouse: { mx, my }, startPos: { x: hit.x, z: hit.z } };
+        }
+        this.updateSidePanel();
+        this.render();
+      } else {
+        let comp;
+        if (this.mode === "source") comp = new Source(this.snapVal(world.x), this.snapVal(world.z));
+        else if (this.mode === "lens") comp = new Lens(this.snapVal(world.x), this.snapVal(world.z));
+        else comp = new Sink(this.snapVal(world.x), this.snapVal(world.z));
+        this.components.push(comp);
+        this.selected = comp;
+        this.setMode("select");
+        this.runSimulation();
+      }
+    });
+
+    canvas.addEventListener("dblclick", e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const world = this.view.screenToWorld(mx, my);
+      const hit = this.hitTest(world.x, world.z);
+      if (hit) { this.selected = hit; this.dialog.open(hit, { x: e.clientX, y: e.clientY }); }
+    });
+
+    window.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      if (mx >= 0 && my >= 0 && mx <= rect.width && my <= rect.height) {
+        const w = this.view.screenToWorld(mx, my);
+        document.getElementById("statusCursor").textContent =
+          "x: " + w.x.toFixed(1) + " z: " + w.z.toFixed(1);
+      }
+      if (this.panning) {
+        this.view.panX = this.panning.startPanX + (mx - this.panning.startX);
+        this.view.panY = this.panning.startPanY + (my - this.panning.startY);
+        this.render();
+        return;
+      }
+      if (this.dragging) {
+        const dz = (mx - this.dragging.startMouse.mx) / this.view.scale;
+        const dx = -(my - this.dragging.startMouse.my) / this.view.scale;
+        const comp = this.dragging.comp;
+        comp.x = this.snapVal(this.dragging.startPos.x + dx);
+        comp.z = this.snapVal(this.dragging.startPos.z + dz);
+        this.runSimulation();
+      }
+    });
+    window.addEventListener("mouseup", () => {
+      if (this.dragging) this.dragging = null;
+      this.panning = null;
+    });
+    canvas.addEventListener("contextmenu", e => e.preventDefault());
+
+    window.addEventListener("keydown", e => {
+      if (document.getElementById("modalOverlay").classList.contains("show")) return;
+      if (!this.selected) return;
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
+      if (tag === "INPUT" || tag === "SELECT") return;
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        e.preventDefault();
+        this.deleteComponent(this.selected);
+      } else if (e.key === "ArrowUp") { e.preventDefault(); this.selected.x += this.snap; this.runSimulation(); }
+      else if (e.key === "ArrowDown") { e.preventDefault(); this.selected.x -= this.snap; this.runSimulation(); }
+      else if (e.key === "ArrowLeft") { e.preventDefault(); this.selected.z -= this.snap; this.runSimulation(); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); this.selected.z += this.snap; this.runSimulation(); }
+      else if (e.ctrlKey && e.key.toLowerCase() === "d") { e.preventDefault(); this.duplicateComponent(this.selected); }
+      else if (e.ctrlKey && e.key.toLowerCase() === "s") { e.preventDefault(); Serializer.download(this); }
+      else if (e.ctrlKey && e.key.toLowerCase() === "o") { e.preventDefault(); document.getElementById("fileInput").click(); }
+    });
+  }
+
+  _bindSideResizer() {
+    const resizer = document.getElementById("sideResizer");
+    const appEl = document.getElementById("app");
+    const side = document.getElementById("side");
+    resizer.addEventListener("mousedown", e => {
+      e.preventDefault();
+      resizer.classList.add("active");
+      const startX = e.clientX;
+      const startWidth = side.getBoundingClientRect().width;
+      const onMove = me => {
+        let newWidth = startWidth - (me.clientX - startX);
+        newWidth = Math.max(220, Math.min(newWidth, window.innerWidth - 300));
+        appEl.style.gridTemplateColumns = `1fr 6px ${newWidth}px`;
+        this.view.resize();
+        this.render();
+      };
+      const onUp = () => {
+        resizer.classList.remove("active");
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      };
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    });
+  }
+
+  updateSidePanel() {
+    document.getElementById("statusCount").textContent = "Components: " + this.components.length;
+    document.getElementById("statusZoom").textContent = "Zoom: " + Math.round(this.view.zoom * 100) + "%";
+
+    // selection info
+    const info = document.getElementById("selectionInfo");
+    if (this.selected) {
+      const c = this.selected;
+      let extra = "";
+      if (c.type === "source") extra = `<div class="metric"><span>Beam width</span><span>${c.beamWidth} mm</span></div><div class="metric"><span>Pointing</span><span>${c.pointing}&deg;</span></div><div class="metric"><span>Divergence</span><span>${c.divergence}&deg;</span></div><div class="metric"><span>Ray count</span><span>${c.rayCount}</span></div>`;
+      if (c.type === "lens") extra = `<div class="metric"><span>Focal length</span><span>${c.focalLength} mm</span></div><div class="metric"><span>Lens type</span><span>${c.lensType}</span></div>`;
+      info.innerHTML = `<div class="metric"><span>Name</span><span>${escapeHtml(c.name)}</span></div>
+        <div class="metric"><span>Type</span><span>${c.type}</span></div>
+        <div class="metric"><span>x, z</span><span>${c.x.toFixed(1)}, ${c.z.toFixed(1)} mm</span></div>
+        <div class="metric"><span>Height</span><span>${c.height} mm</span></div>${extra}`;
+      info.classList.remove("empty-note");
+    } else {
+      info.textContent = "No component selected.";
+      info.classList.add("empty-note");
+    }
+
+    // metrics + ray table + clip report: use first sink with results (or all sinks concatenated)
+    const sinks = this.components.filter(c => c.type === "sink");
+    const metricsEl = document.getElementById("outputMetrics");
+    const rayWrap = document.getElementById("rayTableWrap");
+    const clipEl = document.getElementById("clipReport");
+
+    if (!sinks.length || !sinks.some(s => s.lastResult && s.lastResult.rays.length)) {
+      metricsEl.textContent = "Run the simulation to see results.";
+      metricsEl.classList.add("empty-note");
+      rayWrap.textContent = "No rays traced yet.";
+      rayWrap.classList.add("empty-note");
+      clipEl.textContent = "No clipping detected.";
+      clipEl.classList.add("empty-note");
+      return;
+    }
+
+    let metricsHtml = "";
+    let rayRows = "";
+    let clipHtml = "";
+    let anyClip = false;
+    for (const sink of sinks) {
+      const r = sink.lastResult;
+      if (!r || !r.rays.length) continue;
+      metricsHtml += `<div style="margin-bottom:6px;font-weight:600;">${escapeHtml(sink.name)}</div>`;
+      metricsHtml += metricRow("Spot diameter", fmt(r.spotDiameter, "mm"));
+      metricsHtml += metricRow("Centroid", fmt(r.centroid, "mm"));
+      metricsHtml += metricRow("Magnification", fmt(r.magnification, "x"));
+      metricsHtml += metricRow("Angular magnification", fmt(r.angularMagnification, "x"));
+
+      for (const bundle of r.byBundle) {
+        for (const ray of bundle.rays) {
+          rayRows += `<tr>
+            <td class="l">${bundle.sourceName} / ${ray.label}</td>
+            <td>${ray.alive ? "yes" : "no"}</td>
+            <td>${ray.finalX.toFixed(2)}</td>
+            <td>${(ray.finalTheta * 180 / Math.PI).toFixed(3)}&deg;</td>
+            <td>${ray.alive ? "no" : "yes"}</td>
+            <td class="l">${ray.clippedBy || "-"}</td>
+          </tr>`;
+        }
+      }
+      if (r.clippingReport.length) {
+        anyClip = true;
+        for (const cr of r.clippingReport) {
+          clipHtml += `<div class="clip-item">${cr.kind} ray clipped by ${cr.clippedBy} at z=${cr.clipLocation.z.toFixed(1)}, x=${cr.clipLocation.x.toFixed(2)}</div>`;
+        }
+      }
+    }
+    metricsEl.innerHTML = metricsHtml || "No sink results yet.";
+    metricsEl.classList.remove("empty-note");
+
+    rayWrap.innerHTML = `<table><thead><tr>
+        <th class="l">Ray</th><th>Alive</th><th>Final X</th><th>Final Angle</th><th>Clipped</th><th class="l">Clipped By</th>
+      </tr></thead><tbody>${rayRows}</tbody></table>`;
+    rayWrap.classList.remove("empty-note");
+
+    if (anyClip) { clipEl.innerHTML = clipHtml; clipEl.classList.remove("empty-note"); }
+    else { clipEl.textContent = "No clipping detected."; clipEl.classList.add("empty-note"); }
+  }
+
+  render() {
+    this.view.drawGrid();
+    // draw ray paths first (under components)
+    if (this.lastSimResult) {
+      for (const sink of this.components.filter(c => c.type === "sink")) {
+        if (!sink.lastResult) continue;
+        for (const bundle of sink.lastResult.byBundle) {
+          for (const ray of bundle.rays) this.view.drawRayPath(ray, this.colorProfile);
+        }
+      }
+    }
+    for (const c of this.components) this.view.drawComponent(c, c === this.selected);
+    document.getElementById("statusZoom").textContent = "Zoom: " + Math.round(this.view.zoom * 100) + "%";
+  }
+}
+
+function metricRow(label, value) {
+  return `<div class="metric"><span>${label}</span><span>${value}</span></div>`;
+}
+function fmt(v, unit) {
+  if (v === null || v === undefined || !isFinite(v)) return "—";
+  return v.toFixed(3) + " " + unit;
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
+/* boot */
+window.addEventListener("DOMContentLoaded", () => { window.__app = new Application(); });
+</script>
+</body>
+</html>

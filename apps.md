@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/linear-lens-liner/linear-lens-liner-screenshot.png' | relative_url }}" alt="Linear Lens Liner overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Optics</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/linear_lens_liner.html' | relative_url }}">Linear Lens Liner</a></h2>
+    <p>A browser-based planar optical design tool with interactive source, lens, and sink layout, paraxial ray tracing, FreeCAD lens export, and a Fourier-optics beam propagation calculation.</p>
+    <p><a href="{{ '/portfolio/linear-lens-liner/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/violet-mango/violet-mango-screenshot.png' | relative_url }}" alt="Violet Mango overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
