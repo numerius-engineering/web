@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Sky &amp; Signal Simulator</title>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@4.1.3/dist/satellite.min.js" integrity="sha512-JxDmggH93+jdpfW+JF5CgtX1VNBAsvZVbswpqCtTMPyRvPkI+BMdm0L7JR9fbjxEoWt93AyPeiK0OrvfQWx++A==" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="scanline"></div>
+<header>
+  <h1>▲ GPS Sky &amp; Signal Simulator</h1>
+  <div class="sub">simulated constellation view + real broadcast-message L1 C/A / L2C baseband IQ recording — offline test-data only, not for transmission</div>
+  <div class="sub" style="margin-top:4px;"><span id="versionTag"></span> · <a href="help.html" style="color:var(--cyan);">Help &amp; documentation</a></div>
+</header>
+
+<!-- LOCATION & TIME -->
+<div class="panel">
+  <div class="panel-title"><span class="dot"></span>1. Observer position &amp; time</div>
+  <div class="row">
+    <div class="field"><label>Latitude</label><input id="lat" type="number" step="0.0001" value="37.7749"></div>
+    <div class="field"><label>Longitude</label><input id="lon" type="number" step="0.0001" value="-122.4194"></div>
+    <div class="field"><label>Height (m)</label><input id="hgt" type="number" step="1" value="30"></div>
+    <div class="field"><button id="geoBtn" class="secondary">Use my location</button></div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Date / time (local)</label><input id="dt" type="datetime-local"></div>
+    <div class="field"><button id="nowBtn" class="secondary">Now</button></div>
+  </div>
+  <div class="row">
+    <div class="field"><button id="almanacBtn">Fetch live almanac</button></div>
+  </div>
+  <div id="almanacStatus" class="status">No almanac loaded yet.</div>
+  <div class="note" id="manualNote" style="display:none;">
+    Live fetch failed (likely a CORS/network restriction in this browser). Paste GPS TLE text below (from
+    <a class="dl" href="https://celestrak.org/NORAD/elements/gp.php?GROUP=gps-ops&FORMAT=tle" target="_blank" rel="noopener">celestrak.org GPS-ops TLE</a>) and click "Use pasted data".
+    <br><textarea id="manualTle" placeholder="GPS BIIR-2  (PRN 13)&#10;1 24876U ...&#10;2 24876  ..."></textarea>
+    <button id="manualBtn" class="secondary" style="margin-top:6px;">Use pasted data</button>
+  </div>
+</div>
+
+<!-- SKY VIEW -->
+<div class="panel">
+  <div class="panel-title"><span class="dot"></span>2. Satellites overhead</div>
+  <div class="row"><button id="computeBtn" disabled>Compute sky view</button></div>
+  <div id="skywrap" style="display:none;">
+    <canvas id="skycanvas" width="320" height="320"></canvas>
+    <table id="satTable">
+      <thead><tr><th>PRN</th><th>Az°</th><th>El°</th><th>Range km</th><th>Doppler Hz</th><th>Iono m</th><th>Tropo m</th><th>ClkBias m</th><th>Amp</th><th>Eph Fit m</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div id="skyStatus" class="status"></div>
+  <div class="note">Iono/Tropo delays use the Klobuchar model and a simplified tropospheric mapping function; ClkBias is a synthetic per-satellite offset (real clock corrections require the broadcast nav message, not available from TLE data). Amp is the modeled elevation-dependent gain factor applied in the IQ recording. Eph Fit is the max position error of the real broadcast-format ephemeris (fitted via least squares to SGP4 truth, IS-GPS-200/705 parameterization) over its ±1h fit window — this is what's actually encoded into the nav message bits below, not a placeholder.</div>
+</div>
+
+<!-- IQ RECORDING -->
+<div class="panel">
+  <div class="panel-title"><span class="dot"></span>3. Simulated IQ recording (.wav)</div>
+  <div class="note" style="border-color:var(--phosphor);color:var(--phosphor);">✓ NEW: L5 signal generation (real I5/Q5 XA/XB code generator per IS-GPS-705, NH10/NH20 overlay codes) — select below. L2C (CM/CL codes) and automatic elevation-dependent multipath remain available too.</div>
+  <div class="row">
+    <div class="field"><label>Signal</label>
+      <select id="signal">
+        <option value="l1ca">L1 C/A (1575.42 MHz)</option>
+        <option value="l2c">L2C (1227.60 MHz)</option>
+        <option value="l5">L5 (1176.45 MHz)</option>
+      </select>
+    </div>
+    <div class="field"><label>Sample rate</label>
+      <select id="fs">
+        <option value="2046000">2.046 MHz (compact)</option>
+        <option value="4092000">4.092 MHz</option>
+        <option value="5115000">5.115 MHz</option>
+        <option value="20460000">20.46 MHz (L5 minimum)</option>
+        <option value="25575000">25.575 MHz (L5)</option>
+      </select>
+    </div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Duration (sec)</label><input id="dur" type="number" step="0.1" min="0.1" value="1"></div>
+    <div class="field"><label>Noise floor</label>
+      <select id="noise"><option value="0.6">Realistic (weak signal)</option><option value="0.15">Low noise (easy to see)</option></select>
+    </div>
+  </div>
+  <div class="row">
+    <div class="field"><label>Front-end bandwidth</label>
+      <select id="bw">
+        <option value="2000000">2 MHz (narrow, C/A only)</option>
+        <option value="4000000">4 MHz</option>
+        <option value="8000000">8 MHz (wideband)</option>
+      </select>
+    </div>
+    <div class="field"><label>AGC</label>
+      <select id="agc"><option value="1">Enabled</option><option value="0">Disabled</option></select>
+    </div>
+    <div class="field"><label>ADC quantization</label>
+      <select id="qbits">
+        <option value="2">2-bit (4 levels — typical GNSS front-end)</option>
+        <option value="1">1-bit (hard-limit, 2 levels)</option>
+        <option value="3">3-bit (8 levels)</option>
+        <option value="16">16-bit (idealized, no quantization)</option>
+      </select>
+    </div>
+  </div>
+  <div class="estimate" id="sizeEstimate"></div>
+  <div class="note warn">Real GPS C/A signal power sits well below the noise floor — this sim keeps that ratio, so satellites won't be visible in a raw time-domain plot without correlation, same as a real receiver.</div>
+  <div class="note warn" id="l5SizeWarning" style="display:none;">L5's 10.23 Mcps codes need a much higher sample rate than L1/L2C, so file sizes grow roughly 10x for the same duration — even a few seconds can be hundreds of MB.</div>
+  <div class="note">Signal chain: ideal sum of satellites + thermal noise → front-end bandwidth filter → AGC (regulates on total power, same as real hardware — it can't "see" the buried GPS signal specifically) → ADC quantization. Quantized output is still stored in a standard 16-bit WAV container for compatibility; only a handful of amplitude levels are actually used.</div>
+  <div class="row" style="margin-top:8px;"><button id="genBtn" disabled>Generate WAV</button></div>
+  <div class="progresswrap"><div class="progressbar" id="progressBar"></div></div>
+  <div id="genStatus" class="status"></div>
+  <div id="dlWrap"></div>
+</div>
+
+<!-- CORRELATOR -->
+<div class="panel">
+  <div class="panel-title"><span class="dot"></span>4. Correlator / acquisition proof</div>
+  <div class="note">Now runs in a Worker (won't freeze the page) and supports L1 C/A and L2C (CM-only, full-resolution search restricted to this simulator's 0-1023 combined-chip generation range). Runs a code-phase × Doppler acquisition search against one PRN from the last recording, non-coherently integrating multiple coherent code-period blocks to pull the signal out of the noise — the same principle a real receiver's acquisition engine uses. L5 isn't supported: its 10.23 Mcps codes make a brute-force full-resolution search impractical in-browser (testing confirmed coarser phase steps don't work — PRN autocorrelation is too narrow to detect at reduced resolution).</div>
+  <div class="row">
+    <div class="field"><label>PRN</label><select id="corrPrn"><option value="">Generate a recording first</option></select></div>
+    <div class="field"><button id="corrBtn" disabled>Run correlator</button></div>
+  </div>
+  <div class="progresswrap"><div class="progressbar" id="corrProgressBar"></div></div>
+  <div id="corrStatus" class="status"></div>
+  <div id="corrResult"></div>
+  <canvas id="corrCanvas" width="760" height="320" style="display:none;max-width:100%;width:100%;height:auto;background:#050908;border:1px solid var(--panel-line);border-radius:2px;margin-top:8px;"></canvas>
+</div>
+
+<!-- App scripts, loaded in dependency order. Plain (non-module) <script src>
+     tags are used deliberately -- unlike ES modules or fetch(), these work
+     when the page is opened directly via file://, not just over http(s). -->
+<script src="js/dom-utils.js"></script>
+<script src="js/constants.js"></script>
+<script src="js/tle.js"></script>
+<script src="js/orbit.js"></script>
+<script src="js/sky-view.js"></script>
+<script src="js/worker/codegen-src.js"></script>
+<script src="js/worker/dsp-src.js"></script>
+<script src="js/worker/lnav-src.js"></script>
+<script src="js/worker/cnav-src.js"></script>
+<script src="js/worker/main-src.js"></script>
+<script src="js/worker-bootstrap.js"></script>
+<script src="js/generation.js"></script>
+<script src="js/correlator.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

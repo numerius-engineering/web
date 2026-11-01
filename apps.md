@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/green-olive/green-olive-screenshot.png' | relative_url }}" alt="Green Olive GPS simulator overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">GNSS / DSP</span>
+      <span class="tag">Static web package</span>
+    </div>
+    <h2><a href="{{ '/apps/green_olive/gps-sim.html' | relative_url }}">Green Olive</a></h2>
+    <p>A browser-based GPS sky and signal simulator that shows which satellites are overhead from live almanac data and generates L1 C/A, L2C, and L5 baseband IQ recordings carrying real navigation message content for receiver testing.</p>
+    <p><a href="{{ '/portfolio/green-olive/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/gift-giver/gift-giver-screenshot.png' | relative_url }}" alt="Gift Giver overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
