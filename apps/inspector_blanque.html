@@ -61,6 +61,11 @@ body {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
 }
 
+.result.is-unavailable {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
 .brand {
   text-align: center;
 }
@@ -96,6 +101,14 @@ h2 {
   gap: 0.65rem;
 }
 
+.position-input-actions,
+.analysis-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .control {
   display: grid;
   gap: 0.3rem;
@@ -119,6 +132,21 @@ select {
   padding: 0.64rem;
   background: var(--bg-3);
   color: var(--text-primary);
+}
+
+input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  accent-color: var(--accent);
+}
+
+.checkbox-control {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.86rem;
 }
 
 input:focus,
@@ -162,11 +190,25 @@ button:disabled {
   background: linear-gradient(180deg, #414146, #2c2c31);
 }
 
+.analysis-current-button {
+  background: linear-gradient(180deg, #dc2626, #991b1b);
+}
+
+.analysis-current-button:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ef4444, #b91c1c);
+}
+
 .status,
 .error,
 .note {
   margin: 0.6rem 0 0;
   font-size: 0.92rem;
+}
+
+.match-analysis-note {
+  margin: 0.45rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.75rem;
 }
 
 .error {
@@ -238,6 +280,12 @@ button:disabled {
   color: var(--text-primary);
   font-size: 0.8rem;
   font-weight: 600;
+}
+
+.game-stat-pill {
+  min-height: 26px;
+  padding: 0.22rem 0.48rem;
+  font-size: 0.72rem;
 }
 
 .move-characterization {
@@ -458,7 +506,7 @@ button:disabled {
 
 @media (min-width: 620px) {
   .input-grid.compact {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .game-view-controls {
@@ -508,23 +556,9 @@ button:disabled {
             </select>
           </label>
         </div>
-      </section>
-
-      <section class="panel controls" aria-label="Analysis controls">
-        <h2>Analysis Controls</h2>
-        <div class="input-grid compact">
-          <label class="control">
-            <span>Max depth</span>
-            <input id="depth-input" type="number" min="8" max="30" step="1" value="12" />
-          </label>
-          <label class="control">
-            <span>Max time (ms)</span>
-            <input id="time-input" type="number" min="100" max="120000" step="100" value="5000" />
-          </label>
+        <div class="position-input-actions">
+          <button id="load-position-button" type="button">Load Game</button>
         </div>
-        <button id="analyze-button" type="button">Analyze Position</button>
-        <p id="status-text" class="status">Ready.</p>
-        <p id="error-text" class="error" hidden></p>
       </section>
 
       <section id="game-view-panel" class="panel game-view" aria-label="Game view" hidden>
@@ -541,6 +575,9 @@ button:disabled {
           <span id="time-control" class="game-time-pill" hidden></span>
           <span id="light-clock" class="game-time-pill" hidden></span>
           <span id="dark-clock" class="game-time-pill" hidden></span>
+          <span id="white-material-captured" class="game-time-pill game-stat-pill" hidden></span>
+          <span id="black-material-captured" class="game-time-pill game-stat-pill" hidden></span>
+          <span id="position-evaluation" class="game-time-pill game-stat-pill" hidden></span>
         </div>
         <p id="best-move-text" class="best-move-text is-empty" aria-live="polite">&nbsp;</p>
         <p id="move-characterization" class="move-characterization" hidden></p>
@@ -581,6 +618,44 @@ button:disabled {
             &gt;|
           </button>
         </div>
+      </section>
+
+      <section class="panel controls" aria-label="Analysis controls">
+        <h2>Analysis Controls</h2>
+        <button id="analyze-current-position-button" class="analysis-current-button" type="button">
+          Analyze Current Position
+        </button>
+        <div class="input-grid compact">
+          <label class="control">
+            <span>Analysis profile</span>
+            <select id="analysis-profile-select">
+              <option value="fast">Fast — depth 10 / 750 ms</option>
+              <option value="standard" selected>Standard — depth 12 / 5 s</option>
+              <option value="deep">Deep — depth 16 / 15 s</option>
+              <option value="custom">Custom</option>
+            </select>
+          </label>
+          <label class="control">
+            <span>Max depth</span>
+            <input id="depth-input" type="number" min="8" max="30" step="1" value="12" />
+          </label>
+          <label class="control">
+            <span>Max time (ms)</span>
+            <input id="time-input" type="number" min="100" max="120000" step="100" value="5000" />
+          </label>
+        </div>
+        <label class="checkbox-control">
+          <input id="boundary-rechecks-input" type="checkbox" checked />
+          <span>Recheck borderline move categories (slower, more stable)</span>
+        </label>
+        <div class="analysis-actions">
+          <button id="analyze-button" type="button">Analyze Match</button>
+          <button id="cancel-analysis-button" class="secondary-button" type="button" disabled>
+            Cancel Analysis
+          </button>
+        </div>
+        <p id="status-text" class="status">Ready.</p>
+        <p id="error-text" class="error" hidden></p>
       </section>
 
       <section class="panel result" aria-label="Evaluation result">
@@ -660,6 +735,7 @@ button:disabled {
         <p class="note">
           The app reports evaluation by default and reveals a best move only when you explicitly request it. Principal variation lines remain hidden.
         </p>
+        <p class="match-analysis-note">Use "Analyze Match" to view the categories of moves throughout the game.</p>
       </section>
 
       <footer class="legal">
@@ -4054,7 +4130,15 @@ class Chess {
 
 const CP_CLAMP = 1000;
 const ENGINE_PATH = window.__INSPECTOR_STOCKFISH_WORKER_URL__;
+const CACHE_STORAGE_KEY = "inspector-blanque-analysis-cache-v4";
+const CACHE_LIMIT = 500;
+const ANALYSIS_PROFILES = {
+  fast: { depth: 10, moveTime: 750, boundaryRechecks: false },
+  standard: { depth: 12, moveTime: 5000, boundaryRechecks: true },
+  deep: { depth: 16, moveTime: 15000, boundaryRechecks: true },
+};
 const CATEGORY_KEYS = ["Best", "Excellent", "Good", "Inaccuracy", "Mistake", "Blunder"];
+const MATERIAL_VALUES = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
 const RANKS = [8, 7, 6, 5, 4, 3, 2, 1];
 const PIECE_ASSETS = {
@@ -4079,7 +4163,12 @@ const elements = {
   formatSelect: document.querySelector("#format-select"),
   depthInput: document.querySelector("#depth-input"),
   timeInput: document.querySelector("#time-input"),
+  analysisProfileSelect: document.querySelector("#analysis-profile-select"),
+  boundaryRechecksInput: document.querySelector("#boundary-rechecks-input"),
+  loadPositionButton: document.querySelector("#load-position-button"),
+  analyzeCurrentPositionButton: document.querySelector("#analyze-current-position-button"),
   analyzeButton: document.querySelector("#analyze-button"),
+  cancelAnalysisButton: document.querySelector("#cancel-analysis-button"),
   statusText: document.querySelector("#status-text"),
   errorText: document.querySelector("#error-text"),
   gameViewPanel: document.querySelector("#game-view-panel"),
@@ -4088,6 +4177,9 @@ const elements = {
   timeControl: document.querySelector("#time-control"),
   lightClock: document.querySelector("#light-clock"),
   darkClock: document.querySelector("#dark-clock"),
+  whiteMaterialCaptured: document.querySelector("#white-material-captured"),
+  blackMaterialCaptured: document.querySelector("#black-material-captured"),
+  positionEvaluation: document.querySelector("#position-evaluation"),
   showBestMoveButton: document.querySelector("#show-best-move-button"),
   bestMoveText: document.querySelector("#best-move-text"),
   moveCharacterization: document.querySelector("#move-characterization"),
@@ -4100,6 +4192,7 @@ const elements = {
   prevMoveButton: document.querySelector("#prev-move-button"),
   nextMoveButton: document.querySelector("#next-move-button"),
   nextBlunderButton: document.querySelector("#next-blunder-button"),
+  evaluationPanel: document.querySelector(".panel.result"),
   whiteScore: document.querySelector("#white-score"),
   whitePlayer: document.querySelector("#white-player"),
   whiteAcpl: document.querySelector("#white-acpl"),
@@ -4134,6 +4227,13 @@ const engineState = {
   cache: new Map(),
 };
 
+const analysisState = {
+  activeKind: null,
+  cancelRequested: false,
+};
+
+restoreAnalysisCache();
+
 const gameViewState = createEmptyGameViewState();
 
 if (elements.logo) {
@@ -4148,44 +4248,116 @@ if (elements.logo) {
   });
 }
 
-elements.analyzeButton?.addEventListener("click", async () => {
+elements.loadPositionButton?.addEventListener("click", async () => {
   clearError();
   setBusy(true);
-  engineState.cache.clear();
 
   try {
     const source = await getInputText();
     const mode = resolveFormat(source.text, source.sourceType, elements.formatSelect?.value || "auto");
     const position = mode === "fen" ? parseFen(source.text) : parsePgnGame(source.text);
-
-    if (position.multiGameDetected) {
-      setStatus("PGN has multiple games; analyzing the first game only.");
-    } else {
-      setStatus("Analyzing position...");
-    }
-
-    const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
-    const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
-    const result = await analyzePosition(position.fen, depth, moveTime);
-
-    initializeGameView(position, result.primaryScore);
+    initializeGameView(position);
     renderAcpl(null);
-
-    if (position.moveHistory.length) {
-      setStatus("Computing game move quality...");
-      const acpl = await computeAverageCentipawnLoss(position.moveHistory, depth, moveTime);
-      renderAcpl(acpl);
-    } else {
-      setStatus("Analysis complete.");
-    }
-
-    setStatus("Analysis complete.");
+    setStatus(position.multiGameDetected ? "PGN has multiple games; loaded the first game." : "Position loaded.");
   } catch (error) {
     setError(error instanceof Error ? error.message : String(error));
     setStatus("Ready.");
   } finally {
     setBusy(false);
   }
+});
+
+elements.analyzeCurrentPositionButton?.addEventListener("click", async () => {
+  if (!gameViewState.timeline.length) {
+    setError("Load a PGN or FEN before analyzing the current position.");
+    return;
+  }
+
+  clearError();
+  analysisState.activeKind = "current-position";
+  analysisState.cancelRequested = false;
+  setBusy(true);
+  try {
+    const entry = gameViewState.timeline[gameViewState.currentIndex];
+    const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
+    const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
+    setStatus("Analyzing current position...");
+    const result = await analyzePosition(entry.fen, depth, moveTime, { multiPv: 3 });
+    setPositionScore(gameViewState.currentIndex, result.primaryScore);
+    setStatus("Current-position analysis complete.");
+  } catch (error) {
+    setError(error instanceof Error ? error.message : String(error));
+    setStatus("Ready.");
+  } finally {
+    analysisState.activeKind = null;
+    setBusy(false);
+  }
+});
+
+elements.analysisProfileSelect?.addEventListener("change", () => {
+  applyAnalysisProfile(elements.analysisProfileSelect.value);
+});
+
+for (const input of [elements.depthInput, elements.timeInput, elements.boundaryRechecksInput]) {
+  input?.addEventListener("input", () => {
+    if (elements.analysisProfileSelect) {
+      elements.analysisProfileSelect.value = "custom";
+    }
+  });
+}
+
+elements.analyzeButton?.addEventListener("click", async () => {
+  if (!gameViewState.timeline.length) {
+    setError("Load a PGN or FEN before analyzing the match.");
+    return;
+  }
+
+  clearError();
+  analysisState.activeKind = "match";
+  analysisState.cancelRequested = false;
+  setBusy(true);
+  try {
+    const depth = sanitizeInt(elements.depthInput?.value, 12, 8, 30);
+    const moveTime = sanitizeInt(elements.timeInput?.value, 5000, 100, 120000);
+    const allowBoundaryRechecks = Boolean(elements.boundaryRechecksInput?.checked);
+    const finalEntry = gameViewState.timeline[gameViewState.finalIndex];
+    setStatus("Analyzing match...");
+    const result = await analyzePosition(finalEntry.fen, depth, moveTime, { multiPv: 3 });
+    setPositionScore(gameViewState.finalIndex, result.primaryScore);
+    let matchAnalysis = null;
+
+    if (gameViewState.moveHistory.length) {
+      setStatus("Computing match move quality...");
+      matchAnalysis = await computeAverageCentipawnLoss(gameViewState.moveHistory, depth, moveTime, {
+        allowBoundaryRechecks,
+        shouldCancel: () => analysisState.cancelRequested,
+      });
+      renderAcpl(matchAnalysis);
+    } else {
+      renderAcpl(null);
+    }
+
+    setStatus(
+      analysisState.cancelRequested || matchAnalysis?.cancelled
+        ? "Match analysis cancelled. Partial results are shown."
+        : "Match analysis complete.",
+    );
+  } catch (error) {
+    setError(error instanceof Error ? error.message : String(error));
+    setStatus("Ready.");
+  } finally {
+    analysisState.activeKind = null;
+    setBusy(false);
+  }
+});
+
+elements.cancelAnalysisButton?.addEventListener("click", () => {
+  if (analysisState.activeKind !== "match" || analysisState.cancelRequested) {
+    return;
+  }
+  analysisState.cancelRequested = true;
+  updateCancelAnalysisButton();
+  setStatus("Cancelling after the current position finishes...");
 });
 
 elements.flipBoardButton?.addEventListener("click", () => {
@@ -4292,6 +4464,7 @@ window.addEventListener("resize", () => {
 function createEmptyGameViewState() {
   return {
     mode: null,
+    moveHistory: [],
     orientation: "white",
     timeline: [],
     currentIndex: 0,
@@ -4307,9 +4480,47 @@ function createEmptyGameViewState() {
 
 function setBusy(isBusy) {
   if (elements.analyzeButton) {
-    elements.analyzeButton.disabled = isBusy;
-    elements.analyzeButton.textContent = isBusy ? "Analyzing..." : "Analyze Position";
+    elements.analyzeButton.disabled = isBusy || !gameViewState.timeline.length;
+    elements.analyzeButton.textContent = isBusy ? "Analyzing..." : "Analyze Match";
   }
+  if (elements.analyzeCurrentPositionButton) {
+    elements.analyzeCurrentPositionButton.disabled = isBusy || !gameViewState.timeline.length;
+  }
+  if (elements.loadPositionButton) {
+    elements.loadPositionButton.disabled = isBusy;
+  }
+  updateCancelAnalysisButton();
+  for (const input of [
+    elements.depthInput,
+    elements.timeInput,
+    elements.analysisProfileSelect,
+    elements.boundaryRechecksInput,
+  ]) {
+    if (input) {
+      input.disabled = isBusy;
+    }
+  }
+}
+
+function updateCancelAnalysisButton() {
+  if (!elements.cancelAnalysisButton) {
+    return;
+  }
+  const canCancel = analysisState.activeKind === "match" && !analysisState.cancelRequested;
+  elements.cancelAnalysisButton.disabled = !canCancel;
+  elements.cancelAnalysisButton.textContent = analysisState.cancelRequested
+    ? "Cancelling after current position..."
+    : "Cancel Analysis";
+}
+
+function applyAnalysisProfile(profileName) {
+  const profile = ANALYSIS_PROFILES[profileName];
+  if (!profile) {
+    return;
+  }
+  if (elements.depthInput) elements.depthInput.value = String(profile.depth);
+  if (elements.timeInput) elements.timeInput.value = String(profile.moveTime);
+  if (elements.boundaryRechecksInput) elements.boundaryRechecksInput.checked = profile.boundaryRechecks;
 }
 
 function setStatus(text) {
@@ -4457,10 +4668,11 @@ function formatPlayerMeta(name, rating) {
   return null;
 }
 
-function initializeGameView(position, finalScore) {
+function initializeGameView(position, finalScore = null) {
   gameViewState.mode = position.mode;
   gameViewState.orientation = "white";
   gameViewState.timeline = position.timeline;
+  gameViewState.moveHistory = position.moveHistory;
   gameViewState.currentIndex = Math.max(0, position.timeline.length - 1);
   gameViewState.finalIndex = gameViewState.currentIndex;
   gameViewState.playerMeta = position.playerMeta;
@@ -4470,13 +4682,16 @@ function initializeGameView(position, finalScore) {
   gameViewState.bestMoveVisible = false;
   gameViewState.bestMoves = new Map();
 
-  setPositionScore(gameViewState.finalIndex, finalScore);
+  if (finalScore) {
+    setPositionScore(gameViewState.finalIndex, finalScore);
+  }
   renderPlayerMeta();
   renderGameTimeMeta();
   if (elements.gameViewPanel) {
     elements.gameViewPanel.hidden = false;
   }
   renderCurrentGameView();
+  setBusy(false);
 }
 
 function setPositionScore(index, score) {
@@ -4486,6 +4701,7 @@ function setPositionScore(index, score) {
   gameViewState.positionScores.set(index, { kind: score.kind, value: score.value });
   if (gameViewState.currentIndex === index) {
     renderViewedEvaluation();
+    renderGameTimeMeta();
   }
 }
 
@@ -4556,10 +4772,15 @@ function renderViewedEvaluation() {
 }
 
 function renderUnavailableResult() {
+  setEvaluationAvailability(false);
   if (elements.whiteScore) elements.whiteScore.textContent = "Light: --";
   if (elements.blackScore) elements.blackScore.textContent = "Dark: --";
   if (elements.mateScore) elements.mateScore.textContent = "Mate: --";
   setNeedle(0);
+}
+
+function setEvaluationAvailability(isAvailable) {
+  elements.evaluationPanel?.classList.toggle("is-unavailable", !isAvailable);
 }
 
 function renderPlayerMeta() {
@@ -4568,13 +4789,20 @@ function renderPlayerMeta() {
 }
 
 function renderGameTimeMeta() {
+  const entry = gameViewState.timeline[gameViewState.currentIndex];
   const currentClocks = gameViewState.timeMeta.clocksByIndex?.[gameViewState.currentIndex] || {};
   const timeControlText = gameViewState.timeMeta.timeControl
     ? `Time Control: ${formatTimeControl(gameViewState.timeMeta.timeControl)}`
     : null;
   const lightClockText = currentClocks.white ? `Light Clock: ${currentClocks.white}` : null;
   const darkClockText = currentClocks.black ? `Dark Clock: ${currentClocks.black}` : null;
-  const hasAny = Boolean(timeControlText || lightClockText || darkClockText);
+  const capturedMaterial = entry ? getCapturedMaterialAtIndex(gameViewState.currentIndex) : null;
+  const whiteMaterialText = capturedMaterial ? `White captured: ${capturedMaterial.white}` : null;
+  const blackMaterialText = capturedMaterial ? `Black captured: ${capturedMaterial.black}` : null;
+  const evaluationText = entry ? formatGameViewEvaluation(gameViewState.positionScores.get(gameViewState.currentIndex), entry.fen) : null;
+  const hasAny = Boolean(
+    timeControlText || lightClockText || darkClockText || whiteMaterialText || blackMaterialText || evaluationText,
+  );
 
   if (elements.gameTimeMeta) {
     elements.gameTimeMeta.hidden = !hasAny;
@@ -4582,6 +4810,36 @@ function renderGameTimeMeta() {
   setMetaText(elements.timeControl, timeControlText);
   setMetaText(elements.lightClock, lightClockText);
   setMetaText(elements.darkClock, darkClockText);
+  setMetaText(elements.whiteMaterialCaptured, whiteMaterialText);
+  setMetaText(elements.blackMaterialCaptured, blackMaterialText);
+  setMetaText(elements.positionEvaluation, evaluationText);
+}
+
+function getCapturedMaterialAtIndex(index) {
+  const totals = { white: 0, black: 0 };
+  for (let moveIndex = 1; moveIndex <= index; moveIndex += 1) {
+    const move = gameViewState.timeline[moveIndex]?.move;
+    const value = MATERIAL_VALUES[move?.captured?.toLowerCase()] || 0;
+    if (move?.color === "w") {
+      totals.white += value;
+    } else if (move?.color === "b") {
+      totals.black += value;
+    }
+  }
+  return totals;
+}
+
+function formatGameViewEvaluation(score, fen) {
+  if (!score) {
+    return "Evaluation: --";
+  }
+  const sideToMove = fen.split(/\s+/)[1] || "w";
+  if (score.kind === "cp") {
+    const whiteCp = sideToMove === "w" ? score.value : -score.value;
+    return `Evaluation: ${formatCp(whiteCp)}`;
+  }
+  const winner = inferMateWinner(sideToMove, score.value);
+  return `Evaluation: Mate for ${winner === "w" ? "Light" : "Dark"} in ${Math.abs(score.value)}`;
 }
 
 function setPlayerMetaText(element, text) {
@@ -4958,6 +5216,7 @@ function getBestMoveAnalysisFen() {
 }
 
 function renderResult(result, fen) {
+  setEvaluationAvailability(true);
   const sideToMove = fen.split(/\s+/)[1] || "w";
 
   if (result.kind === "cp") {
@@ -5236,13 +5495,19 @@ function adjustCategoryForConfidence(category, context) {
   return rankToCategory(rank);
 }
 
-async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
+async function computeAverageCentipawnLoss(moveHistory, depth, moveTime, options = {}) {
+  const allowBoundaryRechecks = options.allowBoundaryRechecks !== false;
+  let cancelled = false;
   const totals = {
     w: { loss: 0, count: 0, categories: createCategoryBucket() },
     b: { loss: 0, count: 0, categories: createCategoryBucket() },
   };
 
   for (let i = 0; i < moveHistory.length; i += 1) {
+    if (options.shouldCancel?.()) {
+      cancelled = true;
+      break;
+    }
     const move = moveHistory[i];
     if (!move?.before || !move?.after || !move?.color) {
       continue;
@@ -5276,7 +5541,7 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
     const volatilityCp = Math.abs(bestCpForMover - playedCpForMover);
     let recheckDeltaCp = null;
 
-    if (isNearCategoryBoundary(loss, phase) && playedMoveUci) {
+    if (allowBoundaryRechecks && isNearCategoryBoundary(loss, phase) && playedMoveUci) {
       const initialLoss = loss;
       const deeperDepth = Math.min(30, depth + 2);
       const deeperTime = Math.min(120000, Math.floor(moveTime * 1.5));
@@ -5321,6 +5586,7 @@ async function computeAverageCentipawnLoss(moveHistory, depth, moveTime) {
   const darkLossPercent = (darkAvg / CP_CLAMP) * 100;
 
   return {
+    cancelled,
     light: {
       avg: lightAvg,
       total: totals.w.loss,
@@ -5408,10 +5674,9 @@ async function analyzePosition(fen, depth, moveTime, options = {}) {
 
   const multiPv = Math.max(1, Number.parseInt(String(options.multiPv ?? 1), 10) || 1);
   const searchMoveUci = options.searchMoveUci || null;
-  const includeBestMove = Boolean(options.includeBestMove);
-  const cacheKey = `${fen}|d${depth}|t${moveTime}|mpv${multiPv}|sm:${searchMoveUci || "-"}|bm:${includeBestMove ? 1 : 0}`;
-  if (engineState.cache.has(cacheKey)) {
-    return engineState.cache.get(cacheKey);
+  const cachedResult = findCachedAnalysis(fen, depth, moveTime, multiPv, searchMoveUci);
+  if (cachedResult) {
+    return cachedResult;
   }
 
   return new Promise((resolve, reject) => {
@@ -5437,7 +5702,6 @@ async function analyzePosition(fen, depth, moveTime, options = {}) {
       moveTime,
       multiPv,
       searchMoveUci,
-      includeBestMove,
     };
 
     engineState.worker.postMessage(`setoption name MultiPV value ${multiPv}`);
@@ -5449,6 +5713,64 @@ async function analyzePosition(fen, depth, moveTime, options = {}) {
     }
     engineState.worker.postMessage(goCommand);
   });
+}
+
+function findCachedAnalysis(fen, depth, moveTime, multiPv, searchMoveUci) {
+  for (const cached of engineState.cache.values()) {
+    if (
+      cached.fen === fen &&
+      cached.depth === depth &&
+      cached.moveTime === moveTime &&
+      cached.searchMoveUci === searchMoveUci &&
+      cached.multiPv >= multiPv
+    ) {
+      return cached.result;
+    }
+  }
+  return null;
+}
+
+function restoreAnalysisCache() {
+  try {
+    const stored = window.sessionStorage.getItem(CACHE_STORAGE_KEY);
+    const entries = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(entries)) {
+      return;
+    }
+    for (const entry of entries.slice(-CACHE_LIMIT)) {
+      if (
+        typeof entry?.key === "string" &&
+        typeof entry?.value?.fen === "string" &&
+        entry.value?.result?.primaryScore
+      ) {
+        engineState.cache.set(entry.key, entry.value);
+      }
+    }
+  } catch (_error) {
+    // A blocked or corrupt browser cache must never prevent analysis.
+  }
+}
+
+function persistAnalysisCache() {
+  try {
+    const entries = Array.from(engineState.cache.entries()).slice(-CACHE_LIMIT).map(([key, value]) => ({ key, value }));
+    window.sessionStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(entries));
+  } catch (_error) {
+    // Continue normally when browser storage is unavailable or full.
+  }
+}
+
+function storeCachedAnalysis(analysis, result) {
+  const key = `${analysis.fen}|d${analysis.depth}|t${analysis.moveTime}|mpv${analysis.multiPv}|sm:${analysis.searchMoveUci || "-"}`;
+  engineState.cache.set(key, {
+    fen: analysis.fen,
+    depth: analysis.depth,
+    moveTime: analysis.moveTime,
+    multiPv: analysis.multiPv,
+    searchMoveUci: analysis.searchMoveUci,
+    result,
+  });
+  persistAnalysisCache();
 }
 
 function handleEngineLine(line) {
@@ -5490,19 +5812,18 @@ function handleEngineLine(line) {
         .map((entry) => entry[1]),
       bestMoveUci: bestMoveMatch ? bestMoveMatch[1] : null,
     };
-    engineState.cache.set(
-      `${analysis.fen}|d${analysis.depth}|t${analysis.moveTime}|mpv${analysis.multiPv}|sm:${analysis.searchMoveUci || "-"}|bm:${analysis.includeBestMove ? 1 : 0}`,
-      result,
-    );
+    storeCachedAnalysis(analysis, result);
     analysis.resolve(result);
   }
 }
 
 setNeedle(0);
+setEvaluationAvailability(false);
 renderAcpl(null);
 renderPlayerMeta();
 renderGameTimeMeta();
 updateNavigationControls();
+setBusy(false);
 setStatus("Ready.");
 </script>
   </body>
