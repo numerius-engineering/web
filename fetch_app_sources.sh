@@ -15,6 +15,8 @@
 # Build steps additionally need: python3 (Inspector Blanque, Post Fix Pro),
 # node + npm (RF Ranger), node (Py-Whole).
 #
+# Source repos live in $CODE_DIR (default ~/proj/code) and are fast-forwarded
+# with git pull; build outputs go to their git-ignored dist/ or build/ folders.
 # The script only updates files in apps/. It never commits or pushes: review
 # the result with `git status` / `git diff --stat` afterwards.
 #
@@ -30,6 +32,7 @@ set -euo pipefail
 OWNER="jwkunz"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APPS_DIR="${ROOT_DIR}/apps"
+CODE_DIR="${CODE_DIR:-${HOME}/proj/code}"   # where source repos are cloned
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "${WORK_DIR}"' EXIT
 
@@ -59,9 +62,22 @@ die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 need() { command -v "$1" >/dev/null 2>&1 || die "required command not found: $1"; }
 
-clone() { # clone <repo> -> prints the checkout path
-  local repo="$1" dir="${WORK_DIR}/$1"
-  gh repo clone "${OWNER}/${repo}" "${dir}" -- --depth 1 --quiet >&2
+# clone <repo> -> prints the path of an up-to-date checkout.
+# Uses (and fast-forwards) a persistent clone under CODE_DIR so source repos
+# stay harmonized with their remotes; clones fresh if it is not there yet.
+# Refuses to touch a clone that has uncommitted changes or has diverged.
+clone() {
+  local repo="$1" dir="${CODE_DIR}/$1"
+  if [[ -d "${dir}/.git" ]]; then
+    if [[ -n "$(git -C "${dir}" status --porcelain)" ]]; then
+      die "${dir} has uncommitted changes; commit or stash them first"
+    fi
+    git -C "${dir}" pull --ff-only --quiet >&2 \
+      || die "${dir} cannot fast-forward from its remote; resolve it manually"
+  else
+    mkdir -p "${CODE_DIR}"
+    gh repo clone "${OWNER}/${repo}" "${dir}" -- --quiet >&2
+  fi
   printf '%s\n' "${dir}"
 }
 
@@ -82,9 +98,26 @@ install_file() {
 fetch_post_fix_pro() {
   need python3
   local d; d="$(clone Post-Fix-Pro)"
-  # Packages the checked-in dist/ tree into one self-contained HTML file
-  # (post_fix_pro_vX_Y_Z.html in the repo root) without needing wasm-pack.
-  ( cd "${d}" && ./scripts/single_file_package.sh --no-build >&2 )
+  # dist/pkg (the compiled WASM backend) is git-ignored upstream, so take it
+  # from the latest release zip instead of requiring wasm-pack locally.
+  local rel="${WORK_DIR}/post_fix_pro_release"
+  mkdir -p "${rel}"
+  gh release download -R "${OWNER}/Post-Fix-Pro" -p '*.zip' -D "${rel}" --clobber >&2
+  local zip; zip="$(ls "${rel}"/*.zip 2>/dev/null | head -n1 || true)"
+  [[ -n "${zip}" ]] || die "Post Fix Pro: release zip not found"
+  log "Post Fix Pro release asset: $(basename "${zip}")"
+  python3 - "${zip}" "${d}/dist" <<'PY'
+import sys, zipfile
+z, dist = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(z) as zf:
+    members = [m for m in zf.namelist() if m.startswith("pkg/")]
+    if not members:
+        sys.exit("release zip has no pkg/ directory")
+    zf.extractall(dist, members)
+PY
+  # Packages dist/ into one self-contained HTML file
+  # (post_fix_pro_vX_Y_Z.html in the repo root).
+  ( cd "${d}" && bash ./scripts/single_file_package.sh --no-build >&2 )
   local out; out="$(ls "${d}"/post_fix_pro_v*.html 2>/dev/null | head -n1 || true)"
   [[ -n "${out}" ]] || die "Post Fix Pro: single-file output not found"
   log "Post Fix Pro upstream version: $(tr -d '[:space:]' < "${d}/dist/VERSION" 2>/dev/null || echo unknown)"
@@ -94,7 +127,7 @@ fetch_post_fix_pro() {
 fetch_inspector_blanque() {
   need python3
   local d; d="$(clone Inspector_Blanque)"
-  ( cd "${d}" && ./scripts/build_release.sh >&2 )
+  ( cd "${d}" && bash ./scripts/build_release.sh >&2 )
   local out; out="$(ls "${d}"/dist/Inspector_Blanque_v*_single_file.html 2>/dev/null | head -n1 || true)"
   [[ -n "${out}" ]] || die "Inspector Blanque: single-file output not found"
   log "Inspector Blanque upstream version: $(tr -d '[:space:]' < "${d}/VERSION")"
@@ -104,7 +137,7 @@ fetch_inspector_blanque() {
 fetch_rf_ranger() {
   need python3; need node; need npm
   local d; d="$(clone RF_Ranger)"
-  ( cd "${d}" && ./scripts/build-release.sh >&2 )
+  ( cd "${d}" && bash ./scripts/build-release.sh >&2 )
   local out; out="$(ls "${d}"/build/RF_Ranger_v*_single_file.html 2>/dev/null | head -n1 || true)"
   [[ -n "${out}" ]] || die "RF Ranger: single-file output not found"
   log "RF Ranger upstream version: $(tr -d '[:space:]' < "${d}/VERSION")"
@@ -135,7 +168,7 @@ fetch_wordle_wizard() {
 fetch_py_whole() {
   need node
   local d; d="$(clone py_whole)"
-  ( cd "${d}" && ./scripts/build_static_web_package.sh >&2 )
+  ( cd "${d}" && node scripts/build_static_web_package.mjs >&2 )
   local out="${d}/dist/py_whole_web"
   [[ -d "${out}" ]] || die "Py-Whole: static package not found at ${out}"
   log "Py-Whole upstream version: $(tr -d '[:space:]' < "${d}/VERSION" 2>/dev/null || echo unknown)"
