@@ -21,7 +21,7 @@ featured: true
   <article class="content-block">
     <h2>Project focus</h2>
     <p>This project centered on delivering a polished utility application with the surrounding materials needed for publication and maintenance. The work included product definition, software implementation, and the legal documentation needed to support external distribution.</p>
-    <p><a href="{{ '/apps/post_fix_pro_v6_0_0.html' | relative_url }}">Launch the live browser app</a></p>
+    <p><a href="{{ '/apps/post_fix_pro.html' | relative_url }}">Launch the live browser app</a></p>
   </article>
   <article class="content-block">
     <h2>What it demonstrates</h2>

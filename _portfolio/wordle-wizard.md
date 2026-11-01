@@ -21,7 +21,7 @@ featured: true
   <article class="content-block">
     <h2>Project focus</h2>
     <p>This project centered on rewriting a legacy solver into a portable Rust codebase, exposing it through WebAssembly, and packaging it into a browser-friendly interface that can be used either from a hosted site or as a standalone downloadable HTML file.</p>
-    <p><a href="{{ '/apps/wordle_wizard_v1.1.1_single_file.html' | relative_url }}">Launch the live browser app</a></p>
+    <p><a href="{{ '/apps/wordle_wizard.html' | relative_url }}">Launch the live browser app</a></p>
   </article>
   <article class="content-block">
     <h2>What it demonstrates</h2>

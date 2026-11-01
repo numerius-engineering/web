@@ -101,7 +101,7 @@ description: Gateway for browser-based applications and software tools developed
       <span class="tag">RF analysis</span>
       <span class="tag">Single-file release</span>
     </div>
-    <h2><a href="{{ '/apps/RF_Ranger_v0_66_0_single_file.html' | relative_url }}">RF Ranger</a></h2>
+    <h2><a href="{{ '/apps/rf_ranger.html' | relative_url }}">RF Ranger</a></h2>
     <p>A browser-based RF link analysis and reporting tool with map-driven workflows, persistent local workspaces, export features, and a portable single-file HTML build.</p>
     <p><a href="{{ '/portfolio/rf-ranger/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
@@ -113,7 +113,7 @@ description: Gateway for browser-based applications and software tools developed
       <span class="tag">Chess analysis</span>
       <span class="tag">Single-file release</span>
     </div>
-    <h2><a href="{{ '/apps/Inspector_Blanque_v3_3_0_single_file.html' | relative_url }}">Inspector Blanque</a></h2>
+    <h2><a href="{{ '/apps/inspector_blanque.html' | relative_url }}">Inspector Blanque</a></h2>
     <p>A browser-based chess position evaluator with local Stockfish analysis, PGN/FEN support, move-quality review, and a portable single-file HTML release.</p>
     <p><a href="{{ '/portfolio/inspector-blanque/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
@@ -149,7 +149,7 @@ description: Gateway for browser-based applications and software tools developed
       <span class="tag">Rust + WASM</span>
       <span class="tag">Single-file release</span>
     </div>
-    <h2><a href="{{ '/apps/wordle_wizard_v1.1.1_single_file.html' | relative_url }}">Wordle Wizard</a></h2>
+    <h2><a href="{{ '/apps/wordle_wizard.html' | relative_url }}">Wordle Wizard</a></h2>
     <p>A browser-based Wordle advisor with a portable single-file build and a responsive solver workflow for live gameplay support.</p>
     <p><a href="{{ '/portfolio/wordle-wizard/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
@@ -161,7 +161,7 @@ description: Gateway for browser-based applications and software tools developed
       <span class="tag">Calculator</span>
       <span class="tag">Browser launch</span>
     </div>
-    <h2><a href="{{ '/apps/post_fix_pro_v6_0_0.html' | relative_url }}">Post Fix Pro</a></h2>
+    <h2><a href="{{ '/apps/post_fix_pro.html' | relative_url }}">Post Fix Pro</a></h2>
     <p>A polished calculator experience that can be launched directly in the browser from this app gateway.</p>
     <p><a href="{{ '/portfolio/post-fix-pro/' | relative_url }}">View the project portfolio entry</a></p>
   </article>

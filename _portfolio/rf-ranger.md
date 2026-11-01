@@ -21,7 +21,7 @@ featured: true
   <article class="content-block">
     <h2>Project focus</h2>
     <p>This project centered on turning a technically dense RF workflow into a browser-delivered application: map-based site management, configurable radios and antennas, propagation-model selection, simulation output, and a release path that preserves portability in a single HTML file.</p>
-    <p><a href="{{ '/apps/RF_Ranger_v0_66_0_single_file.html' | relative_url }}">Launch the live browser app</a></p>
+    <p><a href="{{ '/apps/rf_ranger.html' | relative_url }}">Launch the live browser app</a></p>
   </article>
   <article class="content-block">
     <h2>What it demonstrates</h2>

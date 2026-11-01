@@ -21,7 +21,7 @@ featured: true
   <article class="content-block">
     <h2>Project focus</h2>
     <p>This project centered on packaging a serious analysis workflow into a portable front-end experience: local engine execution, move-by-move review tools, board visualization, and a standalone browser artifact that can run without a traditional install process.</p>
-    <p><a href="{{ '/apps/Inspector_Blanque_v3_3_0_single_file.html' | relative_url }}">Launch the live browser app</a></p>
+    <p><a href="{{ '/apps/inspector_blanque.html' | relative_url }}">Launch the live browser app</a></p>
   </article>
   <article class="content-block">
     <h2>What it demonstrates</h2>
