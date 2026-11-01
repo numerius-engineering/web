@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/violet-mango/violet-mango-screenshot.png' | relative_url }}" alt="Violet Mango overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Electromagnetics</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/violet_mango.html' | relative_url }}">Violet Mango</a></h2>
+    <p>A 2.5D finite-difference time-domain electromagnetic solver that runs entirely in the browser, with drawn or imported CAD geometry, PML boundaries, near-to-far-field patterns, and field visualization.</p>
+    <p><a href="{{ '/portfolio/violet-mango/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/euclids-compass/euclids-compass-screenshot.png' | relative_url }}" alt="Euclid's Compass overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>
