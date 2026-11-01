@@ -11,6 +11,18 @@ description: Gateway for browser-based applications and software tools developed
 
 <section class="gallery-grid">
   <article class="gallery-item">
+    <img class="gallery-image" src="{{ '/assets/portfolio/gravitated/gravitated-screenshot.png' | relative_url }}" alt="Gravitated overview">
+    <div class="gallery-meta">
+      <span class="tag">Web app</span>
+      <span class="tag">Physics game</span>
+      <span class="tag">Single-file release</span>
+    </div>
+    <h2><a href="{{ '/apps/gravitated.html' | relative_url }}">Gravitated</a></h2>
+    <p>An N-body gravity simulator with up to 12 configurable bodies, inelastic merging, rotating surfaces, centroid tracking, and a mobile-friendly controls sheet. It also ships as an Android app wrapper.</p>
+    <p><a href="{{ '/portfolio/gravitated/' | relative_url }}">View the project portfolio entry</a></p>
+  </article>
+
+  <article class="gallery-item">
     <img class="gallery-image" src="{{ '/assets/portfolio/linear-lens-liner/linear-lens-liner-screenshot.png' | relative_url }}" alt="Linear Lens Liner overview">
     <div class="gallery-meta">
       <span class="tag">Web app</span>

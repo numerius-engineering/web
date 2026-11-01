@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>N-Body Gravity Simulator</title>
+  <style>
+    :root {
+      --bg: #050816;
+      --panel: rgba(10, 16, 35, 0.95);
+      --panel-2: rgba(18, 28, 58, 0.95);
+      --border: rgba(127, 166, 255, 0.22);
+      --text: #e7eeff;
+      --muted: #9fb3e6;
+      --accent: #7aa2ff;
+      --accent-2: #8cf0ff;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(51, 84, 180, 0.16), transparent 20%),
+        radial-gradient(circle at 80% 15%, rgba(0, 168, 255, 0.10), transparent 20%),
+        radial-gradient(circle at 50% 80%, rgba(120, 0, 255, 0.08), transparent 22%),
+        linear-gradient(180deg, #030611 0%, #070b1d 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+
+    .app {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: 100%;
+      min-height: 100dvh;
+      position: relative;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, rgba(6, 10, 22, 0.96), rgba(6, 10, 22, 0.72));
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      z-index: 5;
+    }
+
+    .title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(27, 45, 91, 0.95), rgba(15, 24, 50, 0.95));
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(140, 240, 255, 0.45);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+
+    button.secondary {
+      background: linear-gradient(180deg, rgba(22, 29, 52, 0.95), rgba(12, 17, 31, 0.95));
+    }
+
+    .mobile-only {
+      display: none;
+    }
+
+    .status {
+      color: var(--muted);
+      font-size: 0.92rem;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(10, 16, 35, 0.7);
+      white-space: nowrap;
+    }
+
+    .sim-area {
+      position: relative;
+      min-height: 0;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .hud {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      display: grid;
+      gap: 8px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .hud-card {
+      width: min(420px, calc(100vw - 40px));
+      background: rgba(9, 15, 33, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      font-size: 0.86rem;
+      line-height: 1.45;
+    }
+
+    .hud-card strong { color: var(--accent-2); }
+
+    .config-panel {
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(7, 12, 25, 0.96), rgba(9, 14, 30, 0.98));
+      padding: 14px 16px 16px;
+      max-height: 46vh;
+      overflow: auto;
+      box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .panel-header {
+      display: none;
+    }
+
+    .panel-backdrop {
+      display: none;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(240px, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .body-card-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .body-card {
+      background: rgba(18, 28, 58, 0.52);
+      border: 1px solid rgba(125, 159, 255, 0.18);
+      border-radius: 16px;
+      padding: 12px;
+    }
+
+    .body-card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .body-card-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-bottom: 10px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .field-grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    input, select {
+      width: 100%;
+      border: 1px solid rgba(125, 159, 255, 0.22);
+      background: var(--panel-2);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 0.92rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: rgba(140, 240, 255, 0.55);
+      box-shadow: 0 0 0 3px rgba(122, 162, 255, 0.12);
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid rgba(125, 159, 255, 0.18);
+      background: rgba(18, 28, 58, 0.72);
+      border-radius: 12px;
+      min-height: 44px;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: #8cf0ff;
+    }
+
+    .small-note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 0.76rem;
+      line-height: 1.35;
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      display: inline-block;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    @media (max-width: 1200px) {
+      .config-grid {
+        grid-template-columns: repeat(2, minmax(260px, 1fr));
+      }
+    }
+
+    @media (max-width: 980px) {
+      html, body {
+        overflow: hidden;
+      }
+
+      .app {
+        display: block;
+        height: 100dvh;
+        min-height: 100dvh;
+      }
+
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar {
+        position: absolute;
+        top: max(10px, env(safe-area-inset-top));
+        left: 10px;
+        right: 10px;
+        flex-direction: column;
+        align-items: stretch;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        z-index: 10;
+      }
+
+      .title {
+        font-size: 1rem;
+      }
+
+      .subtitle {
+        display: none;
+      }
+
+      .controls {
+        justify-content: flex-start;
+      }
+
+      .mobile-only {
+        display: inline-flex;
+      }
+
+      .sim-area {
+        height: 100dvh;
+      }
+
+      .hud {
+        top: calc(max(10px, env(safe-area-inset-top)) + 104px);
+        left: 10px;
+        right: 10px;
+        z-index: 9;
+      }
+
+      .hud-card {
+        width: 100%;
+      }
+
+      .app:not(.stats-open) .hud {
+        display: none;
+      }
+
+      .panel-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(2, 6, 16, 0.5);
+        backdrop-filter: blur(3px);
+        z-index: 11;
+      }
+
+      .app.controls-open .panel-backdrop {
+        display: block;
+      }
+
+      .config-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: min(76dvh, 76vh);
+        padding: 14px 16px calc(16px + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--border);
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        transform: translateY(calc(100% + 24px));
+        transition: transform 180ms ease;
+        z-index: 12;
+      }
+
+      .app.controls-open .config-panel {
+        transform: translateY(0);
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .panel-title {
+        font-size: 1rem;
+        font-weight: 700;
+      }
+
+      .panel-subtitle {
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title-wrap">
+        <div class="title">N-Body Gravity Simulator</div>
+        <div class="subtitle">N-body gravitational simulation with inelastic merging, centroid tracking, and an auto-fit viewport</div>
+      </div>
+      <div class="controls">
+        <button id="startBtn">Start</button>
+        <button id="pauseBtn" class="secondary">Pause</button>
+        <button id="restartBtn" class="secondary">Restart</button>
+        <div class="status" id="statusText">Paused</div>
+        <button id="statsToggleBtn" class="secondary mobile-only" type="button">Stats</button>
+        <button id="controlsToggleBtn" class="secondary mobile-only" type="button">Controls</button>
+      </div>
+    </div>
+
+    <div class="sim-area">
+      <canvas id="simCanvas"></canvas>
+      <div class="hud">
+        <div class="hud-card" id="hudStats"></div>
+      </div>
+    </div>
+
+    <div class="panel-backdrop" id="panelBackdrop"></div>
+
+    <div class="config-panel">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">Simulation Controls</div>
+          <div class="panel-subtitle">Adjust parameters here, then return to the full-screen simulation.</div>
+        </div>
+        <button id="closeControlsBtn" class="secondary" type="button">Done</button>
+      </div>
+      <div class="config-grid">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3 style="margin:0;">Bodies</h3>
+              <div class="muted" style="margin:6px 0 0;">Add up to 12 bodies. Each card controls one body in the system.</div>
+            </div>
+            <div class="card-actions">
+              <button id="addBodyBtn" type="button">Add Body</button>
+            </div>
+          </div>
+
+          <div id="bodyCards" class="body-card-list"></div>
+
+          <div class="small-note">Collisions merge bodies inelastically. For a 2D simulation, only <strong>Lz</strong> affects visible spin.</div>
+        </div>
+
+        <div class="card">
+          <h3>Simulation</h3>
+          <div class="muted">Changes apply immediately when paused and on restart when running.</div>
+
+          <div class="field-grid">
+            <div class="field"><label for="timeStep">Time step (dt)</label><input id="timeStep" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="0.08"></div>
+            <div class="field"><label for="gravConst">Gravitational constant (G)</label><input id="gravConst" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="140"></div>
+            <div class="field"><label for="pixelsPerUnit">Base pixels per unit</label><input id="pixelsPerUnit" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="1"></div>
+            <div class="field"><label for="trailLength">Trail length</label><input id="trailLength" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="250"></div>
+          </div>
+
+          <div class="field-grid" style="margin-top:10px;">
+            <div class="field"><label for="autoFitPadding">Auto-fit padding factor</label><input id="autoFitPadding" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="1.2"></div>
+            <div class="field"><label for="zoomSmoothing">Zoom smoothing (0-1)</label><input id="zoomSmoothing" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="0.08"></div>
+          </div>
+
+          <div class="legend">
+            <span><span class="dot" style="background:#8cf0ff"></span>Palette colors cycle per body</span>
+            <span><span class="dot" style="background:#d8a8ff"></span>Merged body</span>
+          </div>
+
+          <div class="small-note">Default values are tuned to give the initial N-body scene visible motion without extra setup.</div>
+        </div>
+
+        <div class="card">
+          <h3>View Controls</h3>
+          <div class="muted">Camera options for tracking and dynamic viewport resizing.</div>
+
+          <div class="field-grid">
+            <div class="field full">
+              <div class="checkbox-row">
+                <input id="trackCentroid" type="checkbox" checked>
+                <label for="trackCentroid">Keep screen centered on the centroid between the masses</label>
+              </div>
+            </div>
+            <div class="field full">
+              <div class="checkbox-row">
+                <input id="autoResizeViewport" type="checkbox" checked>
+                <label for="autoResizeViewport">Dynamically resize viewport if bodies exit or approach screen bounds</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="small-note">With centroid tracking on, the visual center follows the center of mass. With auto-fit on, the effective scale adjusts smoothly to keep all bodies visible with margin.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const statusText = document.getElementById('statusText');
+    const hudStats = document.getElementById('hudStats');
+    const appRoot = document.querySelector('.app');
+    const statsToggleBtn = document.getElementById('statsToggleBtn');
+    const controlsToggleBtn = document.getElementById('controlsToggleBtn');
+    const closeControlsBtn = document.getElementById('closeControlsBtn');
+    const panelBackdrop = document.getElementById('panelBackdrop');
+    const bodyCardsContainer = document.getElementById('bodyCards');
+    const addBodyBtn = document.getElementById('addBodyBtn');
+
+    const MAX_BODIES = 12;
+    const BODY_COLORS = ['#8cf0ff', '#ffbf69', '#ff7aa2', '#92ffb0', '#d9a8ff', '#ffd66e', '#7de3ff', '#ff9f6e'];
+    const defaultBodyConfigs = [
+      {
+        name: 'Body 1',
+        color: BODY_COLORS[0],
+        pos: { x: -160, y: 0 },
+        vel: { x: 0, y: 25 },
+        radius: 24,
+        density: 1.8,
+        L: { x: 0, y: 0, z: 1600 }
+      },
+      {
+        name: 'Body 2',
+        color: BODY_COLORS[1],
+        pos: { x: 160, y: 0 },
+        vel: { x: 0, y: -10 },
+        radius: 18,
+        density: 2.4,
+        L: { x: 0, y: 0, z: -1100 }
+      }
+    ];
+
+    const inputIds = [
+      'timeStep','gravConst','pixelsPerUnit','trailLength','autoFitPadding','zoomSmoothing',
+      'trackCentroid','autoResizeViewport'
+    ];
+
+    const inputs = Object.fromEntries(inputIds.map(id => [id, document.getElementById(id)]));
+
+    const state = {
+      running: false,
+      animationId: null,
+      lastTimestamp: null,
+      dt: 0.08,
+      G: 140,
+      basePixelsPerUnit: 1,
+      viewPixelsPerUnit: 1,
+      trailLength: 250,
+      trackCentroid: true,
+      autoResizeViewport: true,
+      autoFitPadding: 1.2,
+      zoomSmoothing: 0.08,
+      bodies: [],
+      starField: [],
+      cameraCenter: { x: 0, y: 0 }
+    };
+    let mobileLayout = isMobileLayout();
+
+    function isMobileLayout() {
+      return window.matchMedia('(max-width: 980px)').matches;
+    }
+
+    function setStatsOpen(open) {
+      if (open) {
+        appRoot.classList.add('stats-open');
+      } else {
+        appRoot.classList.remove('stats-open');
+      }
+      if (statsToggleBtn) {
+        statsToggleBtn.textContent = appRoot.classList.contains('stats-open') ? 'Hide Stats' : 'Stats';
+      }
+    }
+
+    function setControlsOpen(open) {
+      if (open) {
+        appRoot.classList.add('controls-open');
+      } else {
+        appRoot.classList.remove('controls-open');
+      }
+      if (controlsToggleBtn) {
+        controlsToggleBtn.textContent = appRoot.classList.contains('controls-open') ? 'Hide Controls' : 'Controls';
+      }
+    }
+
+    function applyLayoutMode(force = false) {
+      const mobile = isMobileLayout();
+      if (!force && mobile === mobileLayout) {
+        resizeCanvas();
+        return;
+      }
+
+      mobileLayout = mobile;
+      if (!mobile) {
+        setStatsOpen(true);
+        setControlsOpen(false);
+      } else {
+        setStatsOpen(false);
+        setControlsOpen(false);
+      }
+      resizeCanvas();
+    }
+
+    function resizeCanvas() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.floor(rect.width * dpr);
+      canvas.height = Math.floor(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      generateStars();
+      updateCamera(true);
+      render();
+    }
+
+    function generateStars() {
+      const rect = canvas.getBoundingClientRect();
+      const count = Math.max(120, Math.floor((rect.width * rect.height) / 5000));
+      state.starField = Array.from({ length: count }, () => ({
+        x: Math.random() * rect.width,
+        y: Math.random() * rect.height,
+        r: Math.random() * 1.8 + 0.3,
+        a: Math.random() * 0.75 + 0.15
+      }));
+    }
+
+    function num(id, fallback = 0) {
+      const value = parseFloat(inputs[id].value);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function bool(id) {
+      return Boolean(inputs[id].checked);
+    }
+
+    function clampPositive(value, min = 0.0001) {
+      return Math.max(min, Math.abs(value));
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function massFrom(radius, density) {
+      return density * Math.PI * radius * radius;
+    }
+
+    function inertiaDisk(mass, radius) {
+      return 0.5 * mass * radius * radius;
+    }
+
+    function buildBody(config) {
+      const radius = clampPositive(config.radius, 1);
+      const density = clampPositive(config.density, 1);
+      const mass = massFrom(radius, density);
+      const L = structuredClone(config.L);
+
+      return {
+        name: config.name,
+        color: config.color,
+        pos: { x: config.pos.x, y: config.pos.y },
+        vel: { x: config.vel.x, y: config.vel.y },
+        radius,
+        density,
+        mass,
+        L,
+        angle: 0,
+        trail: []
+      };
+    }
+
+    function createBodyConfig(overrides = {}) {
+      return {
+        name: overrides.name ?? `Body ${Date.now()}`,
+        color: overrides.color ?? BODY_COLORS[0],
+        pos: { x: overrides.pos?.x ?? 0, y: overrides.pos?.y ?? 0 },
+        vel: { x: overrides.vel?.x ?? 0, y: overrides.vel?.y ?? 0 },
+        radius: overrides.radius ?? 16,
+        density: overrides.density ?? 1.8,
+        L: {
+          x: overrides.L?.x ?? 0,
+          y: overrides.L?.y ?? 0,
+          z: overrides.L?.z ?? 0
+        }
+      };
+    }
+
+    function bodyCardMarkup(config, index, canRemove) {
+      return `
+        <div class="body-card" data-index="${index}" data-color="${config.color}">
+          <div class="body-card-title">
+            <div class="body-card-name">
+              <span class="swatch" style="background:${config.color}"></span>
+              <span>${config.name}</span>
+            </div>
+            <button class="secondary remove-body-btn" type="button" ${canRemove ? '' : 'disabled'}>Remove</button>
+          </div>
+
+          <div class="field-grid">
+            <div class="field"><label>Position x</label><input data-field="px" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.pos.x}"></div>
+            <div class="field"><label>Position y</label><input data-field="py" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.pos.y}"></div>
+            <div class="field"><label>Velocity x</label><input data-field="vx" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.vel.x}"></div>
+            <div class="field"><label>Velocity y</label><input data-field="vy" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.vel.y}"></div>
+          </div>
+
+          <div class="field-grid three" style="margin-top:10px;">
+            <div class="field"><label>Angular Lx</label><input data-field="lx" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.L.x}"></div>
+            <div class="field"><label>Angular Ly</label><input data-field="ly" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.L.y}"></div>
+            <div class="field"><label>Angular Lz</label><input data-field="lz" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.L.z}"></div>
+          </div>
+
+          <div class="field-grid" style="margin-top:10px;">
+            <div class="field"><label>Radius</label><input data-field="radius" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.radius}"></div>
+            <div class="field"><label>Density</label><input data-field="density" type="text" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="${config.density}"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function readField(card, field, fallback = 0) {
+      const input = card.querySelector(`[data-field="${field}"]`);
+      const value = parseFloat(input?.value ?? '');
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function readBodyConfigs() {
+      return Array.from(bodyCardsContainer.querySelectorAll('.body-card')).map((card, index) => ({
+        name: `Body ${index + 1}`,
+        color: card.dataset.color || BODY_COLORS[index % BODY_COLORS.length],
+        pos: { x: readField(card, 'px'), y: readField(card, 'py') },
+        vel: { x: readField(card, 'vx'), y: readField(card, 'vy') },
+        radius: readField(card, 'radius', 16),
+        density: readField(card, 'density', 1.8),
+        L: {
+          x: readField(card, 'lx'),
+          y: readField(card, 'ly'),
+          z: readField(card, 'lz')
+        }
+      }));
+    }
+
+    function renderBodyCards(configs) {
+      bodyCardsContainer.innerHTML = configs.map((config, index) =>
+        bodyCardMarkup(
+          {
+            ...config,
+            name: `Body ${index + 1}`,
+            color: config.color ?? BODY_COLORS[index % BODY_COLORS.length]
+          },
+          index,
+          configs.length > 1
+        )
+      ).join('');
+
+      addBodyBtn.disabled = configs.length >= MAX_BODIES;
+    }
+
+    function getSuggestedNewBodyConfig() {
+      const configs = readBodyConfigs();
+      const count = configs.length;
+      const center = configs.length
+        ? configs.reduce((acc, body) => {
+            acc.x += body.pos.x;
+            acc.y += body.pos.y;
+            return acc;
+          }, { x: 0, y: 0 })
+        : { x: 0, y: 0 };
+
+      center.x /= Math.max(1, configs.length);
+      center.y /= Math.max(1, configs.length);
+
+      const angle = count * (Math.PI * 0.72);
+      const distance = 120 + count * 22;
+      return createBodyConfig({
+        name: `Body ${count + 1}`,
+        color: BODY_COLORS[count % BODY_COLORS.length],
+        pos: {
+          x: center.x + Math.cos(angle) * distance,
+          y: center.y + Math.sin(angle) * distance
+        },
+        vel: { x: 0, y: 0 },
+        radius: 16,
+        density: 1.8,
+        L: { x: 0, y: 0, z: 0 }
+      });
+    }
+
+    function readConfig() {
+      return {
+        dt: clampPositive(num('timeStep'), 0.01),
+        G: Math.max(0, num('gravConst', 140)),
+        basePixelsPerUnit: clampPositive(num('pixelsPerUnit'), 1),
+        trailLength: Math.max(0, Math.floor(Math.abs(num('trailLength', 250)))),
+        trackCentroid: bool('trackCentroid'),
+        autoResizeViewport: bool('autoResizeViewport'),
+        autoFitPadding: Math.max(1, Math.abs(num('autoFitPadding', 1.2))),
+        zoomSmoothing: Math.min(1, Math.max(0, Math.abs(num('zoomSmoothing', 0.08)))),
+        bodies: readBodyConfigs().map(buildBody)
+      };
+    }
+
+    function applyConfig(config) {
+      state.dt = config.dt;
+      state.G = config.G;
+      state.basePixelsPerUnit = config.basePixelsPerUnit;
+      state.viewPixelsPerUnit = config.basePixelsPerUnit;
+      state.trailLength = config.trailLength;
+      state.trackCentroid = config.trackCentroid;
+      state.autoResizeViewport = config.autoResizeViewport;
+      state.autoFitPadding = config.autoFitPadding;
+      state.zoomSmoothing = config.zoomSmoothing;
+      state.bodies = structuredClone(config.bodies);
+      state.bodies.forEach(body => {
+        body.trail = [];
+        body.angle = 0;
+      });
+      state.cameraCenter = computeCentroid();
+      updateCamera(true);
+      statusText.textContent = state.running ? 'Running' : 'Paused';
+      render();
+    }
+
+    function resetSimulation() {
+      state.running = false;
+      state.lastTimestamp = null;
+      applyConfig(readConfig());
+    }
+
+    function syncPausedConfig() {
+      if (!state.running) resetSimulation();
+    }
+
+    function startSimulation() {
+      if (!state.running) {
+        state.running = true;
+        state.lastTimestamp = null;
+        statusText.textContent = 'Running';
+        state.animationId = requestAnimationFrame(loop);
+      }
+    }
+
+    function pauseSimulation() {
+      state.running = false;
+      state.lastTimestamp = null;
+      statusText.textContent = 'Paused';
+      if (state.animationId) cancelAnimationFrame(state.animationId);
+    }
+
+    function restartSimulation() {
+      pauseSimulation();
+      resetSimulation();
+    }
+
+    function vecLen(v) {
+      return Math.hypot(v.x, v.y);
+    }
+
+    function computeCentroid() {
+      if (state.bodies.length === 0) return { x: 0, y: 0 };
+      const totalMass = state.bodies.reduce((sum, b) => sum + b.mass, 0) || 1;
+      return state.bodies.reduce((acc, b) => {
+        acc.x += b.pos.x * b.mass / totalMass;
+        acc.y += b.pos.y * b.mass / totalMass;
+        return acc;
+      }, { x: 0, y: 0 });
+    }
+
+    function computeTargetViewScale() {
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height || state.bodies.length === 0) return state.basePixelsPerUnit;
+
+      const center = state.trackCentroid ? computeCentroid() : state.cameraCenter;
+      let maxExtentX = 1;
+      let maxExtentY = 1;
+
+      for (const body of state.bodies) {
+        maxExtentX = Math.max(maxExtentX, Math.abs(body.pos.x - center.x) + body.radius);
+        maxExtentY = Math.max(maxExtentY, Math.abs(body.pos.y - center.y) + body.radius);
+      }
+
+      const pad = state.autoFitPadding;
+      const allowedX = rect.width * 0.5 / (maxExtentX * pad);
+      const allowedY = rect.height * 0.5 / (maxExtentY * pad);
+      const fitScale = Math.min(allowedX, allowedY);
+      return Math.min(state.basePixelsPerUnit, fitScale);
+    }
+
+    function updateCamera(force = false) {
+      const centroid = computeCentroid();
+
+      if (state.trackCentroid) {
+        if (force) {
+          state.cameraCenter = { ...centroid };
+        } else {
+          state.cameraCenter.x = lerp(state.cameraCenter.x, centroid.x, 0.15);
+          state.cameraCenter.y = lerp(state.cameraCenter.y, centroid.y, 0.15);
+        }
+      }
+
+      const targetScale = state.autoResizeViewport ? computeTargetViewScale() : state.basePixelsPerUnit;
+      if (force) {
+        state.viewPixelsPerUnit = targetScale;
+      } else {
+        state.viewPixelsPerUnit = lerp(state.viewPixelsPerUnit, targetScale, state.zoomSmoothing);
+      }
+    }
+
+    function mergeBodies(a, b) {
+      const totalMass = a.mass + b.mass;
+      const totalMomentum = {
+        x: a.mass * a.vel.x + b.mass * b.vel.x,
+        y: a.mass * a.vel.y + b.mass * b.vel.y
+      };
+      const pos = {
+        x: (a.mass * a.pos.x + b.mass * b.pos.x) / totalMass,
+        y: (a.mass * a.pos.y + b.mass * b.pos.y) / totalMass
+      };
+      const vel = {
+        x: totalMomentum.x / totalMass,
+        y: totalMomentum.y / totalMass
+      };
+
+      const area = Math.PI * a.radius * a.radius + Math.PI * b.radius * b.radius;
+      const density = totalMass / area;
+      const radius = Math.sqrt(area / Math.PI);
+      const L = {
+        x: a.L.x + b.L.x,
+        y: a.L.y + b.L.y,
+        z: a.L.z + b.L.z
+      };
+
+      return {
+        name: 'Merged',
+        color: '#d8a8ff',
+        pos,
+        vel,
+        radius,
+        density,
+        mass: totalMass,
+        L,
+        angle: 0,
+        trail: [...a.trail, ...b.trail].slice(-state.trailLength)
+      };
+    }
+
+    function findCollidingPair() {
+      for (let i = 0; i < state.bodies.length; i++) {
+        for (let j = i + 1; j < state.bodies.length; j++) {
+          const a = state.bodies[i];
+          const b = state.bodies[j];
+          const dx = b.pos.x - a.pos.x;
+          const dy = b.pos.y - a.pos.y;
+          if (Math.hypot(dx, dy) <= a.radius + b.radius) {
+            return [i, j];
+          }
+        }
+      }
+      return null;
+    }
+
+    function resolveCollisions() {
+      let pair = findCollidingPair();
+      while (pair) {
+        const [i, j] = pair;
+        const merged = mergeBodies(state.bodies[i], state.bodies[j]);
+        state.bodies.splice(j, 1);
+        state.bodies.splice(i, 1);
+        state.bodies.push(merged);
+        pair = findCollidingPair();
+      }
+    }
+
+    function stepSimulation(substeps = 1) {
+      for (let step = 0; step < substeps; step++) {
+        resolveCollisions();
+
+        const accelerations = state.bodies.map(() => ({ x: 0, y: 0 }));
+        const softening = 1e-6;
+
+        for (let i = 0; i < state.bodies.length; i++) {
+          for (let j = i + 1; j < state.bodies.length; j++) {
+            const a = state.bodies[i];
+            const b = state.bodies[j];
+            const dx = b.pos.x - a.pos.x;
+            const dy = b.pos.y - a.pos.y;
+            const distSq = dx * dx + dy * dy;
+            const dist = Math.sqrt(distSq + softening);
+            const invDist = 1 / dist;
+            const ux = dx * invDist;
+            const uy = dy * invDist;
+            const forceMag = state.G * a.mass * b.mass / (distSq + softening);
+
+            accelerations[i].x += (forceMag / a.mass) * ux;
+            accelerations[i].y += (forceMag / a.mass) * uy;
+            accelerations[j].x -= (forceMag / b.mass) * ux;
+            accelerations[j].y -= (forceMag / b.mass) * uy;
+          }
+        }
+
+        state.bodies.forEach((body, index) => {
+          body.vel.x += accelerations[index].x * state.dt;
+          body.vel.y += accelerations[index].y * state.dt;
+          body.pos.x += body.vel.x * state.dt;
+          body.pos.y += body.vel.y * state.dt;
+        });
+
+        resolveCollisions();
+
+        state.bodies.forEach(body => {
+          const I = inertiaDisk(body.mass, body.radius);
+          const omega = I > 0 ? body.L.z / I : 0;
+          body.angle += omega * state.dt;
+          body.trail.push({ x: body.pos.x, y: body.pos.y });
+          if (body.trail.length > state.trailLength) {
+            body.trail.splice(0, body.trail.length - state.trailLength);
+          }
+        });
+      }
+
+      updateCamera();
+    }
+
+    function summarizeBody(body) {
+      const speed = vecLen(body.vel);
+      return `<strong>${body.name}</strong> m=${body.mass.toFixed(2)}, r=${body.radius.toFixed(2)}, |v|=${speed.toFixed(3)}, ` +
+        `Lz=${body.L.z.toFixed(1)}`;
+    }
+
+    function renderHud() {
+      const lines = [];
+      lines.push(`<strong>dt</strong> ${state.dt.toFixed(4)} | <strong>G</strong> ${state.G.toFixed(3)} | <strong>bodies</strong> ${state.bodies.length}`);
+      lines.push(`<strong>track centroid</strong> ${state.trackCentroid ? 'on' : 'off'} | <strong>auto-fit</strong> ${state.autoResizeViewport ? 'on' : 'off'}`);
+      lines.push(`<strong>base px/unit</strong> ${state.basePixelsPerUnit.toFixed(3)} | <strong>view px/unit</strong> ${state.viewPixelsPerUnit.toFixed(3)}`);
+      lines.push(`<strong>camera center</strong> (${state.cameraCenter.x.toFixed(2)}, ${state.cameraCenter.y.toFixed(2)})`);
+
+      const totalMass = state.bodies.reduce((sum, body) => sum + body.mass, 0);
+      lines.push(`<strong>total mass</strong> ${totalMass.toFixed(2)}`);
+
+      if (state.bodies.length <= 3) {
+        state.bodies.forEach(body => lines.push(summarizeBody(body)));
+      } else {
+        state.bodies.slice(0, 3).forEach(body => lines.push(summarizeBody(body)));
+        lines.push(`<strong>additional bodies</strong> ${state.bodies.length - 3} more`);
+      }
+
+      if (state.bodies.length >= 2) {
+        let minDistance = Infinity;
+        for (let i = 0; i < state.bodies.length; i++) {
+          for (let j = i + 1; j < state.bodies.length; j++) {
+            const dx = state.bodies[j].pos.x - state.bodies[i].pos.x;
+            const dy = state.bodies[j].pos.y - state.bodies[i].pos.y;
+            minDistance = Math.min(minDistance, Math.hypot(dx, dy));
+          }
+        }
+        lines.push(`<strong>closest separation</strong> ${minDistance.toFixed(3)}`);
+      }
+      hudStats.innerHTML = lines.join('<br>');
+    }
+
+    function worldToScreen(pos) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: rect.width / 2 + (pos.x - state.cameraCenter.x) * state.viewPixelsPerUnit,
+        y: rect.height / 2 - (pos.y - state.cameraCenter.y) * state.viewPixelsPerUnit
+      };
+    }
+
+    function drawBackground() {
+      const rect = canvas.getBoundingClientRect();
+      const gradient = ctx.createRadialGradient(
+        rect.width * 0.5, rect.height * 0.45, 30,
+        rect.width * 0.5, rect.height * 0.45, rect.width * 0.8
+      );
+      gradient.addColorStop(0, 'rgba(13, 22, 50, 0.55)');
+      gradient.addColorStop(1, 'rgba(4, 7, 18, 1)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, rect.width, rect.height);
+
+      for (const s of state.starField) {
+        ctx.globalAlpha = s.a;
+        ctx.beginPath();
+        ctx.fillStyle = '#ffffff';
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawTrails() {
+      state.bodies.forEach(body => {
+        if (body.trail.length < 2) return;
+        ctx.save();
+        ctx.lineWidth = 1.5;
+        for (let i = 1; i < body.trail.length; i++) {
+          const p0 = worldToScreen(body.trail[i - 1]);
+          const p1 = worldToScreen(body.trail[i]);
+          ctx.strokeStyle = hexToRgba(body.color, i / body.trail.length * 0.8);
+          ctx.beginPath();
+          ctx.moveTo(p0.x, p0.y);
+          ctx.lineTo(p1.x, p1.y);
+          ctx.stroke();
+        }
+        ctx.restore();
+      });
+    }
+
+    function drawBodies() {
+      state.bodies.forEach(body => {
+        const p = worldToScreen(body.pos);
+        const r = Math.max(2, body.radius * state.viewPixelsPerUnit);
+
+        const glow = ctx.createRadialGradient(p.x, p.y, r * 0.15, p.x, p.y, r * 1.9);
+        glow.addColorStop(0, hexToRgba(body.color, 0.95));
+        glow.addColorStop(0.4, hexToRgba(body.color, 0.25));
+        glow.addColorStop(1, hexToRgba(body.color, 0));
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r * 1.9, 0, Math.PI * 2);
+        ctx.fill();
+
+        const fill = ctx.createRadialGradient(p.x - r * 0.35, p.y - r * 0.35, r * 0.15, p.x, p.y, r);
+        fill.addColorStop(0, 'rgba(255,255,255,0.95)');
+        fill.addColorStop(0.16, body.color);
+        fill.addColorStop(1, shadeColor(body.color, -36));
+        ctx.fillStyle = fill;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        drawBodySurfaceTexture(body, p, r);
+        ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(-body.angle);
+        ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+        ctx.lineWidth = Math.max(1, r * 0.08);
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(r * 0.95, 0);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,0.95)';
+        ctx.beginPath();
+        ctx.arc(r * 0.72, 0, Math.max(1.8, r * 0.08), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        drawVelocityVector(body, p, r);
+      });
+    }
+
+    function drawBodySurfaceTexture(body, screenPos, radiusPx) {
+      const spinMagnitude = Math.min(1.35, Math.abs(body.L.z) / Math.max(1, body.mass * body.radius * 16));
+      const bandCount = 4 + Math.round(spinMagnitude * 4);
+      const spotCount = 3 + Math.round(spinMagnitude * 5);
+
+      ctx.save();
+      ctx.translate(screenPos.x, screenPos.y);
+      ctx.rotate(-body.angle);
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radiusPx * 0.985, 0, Math.PI * 2);
+      ctx.clip();
+
+      for (let i = 0; i < bandCount; i++) {
+        const y = ((i + 0.5) / bandCount - 0.5) * radiusPx * 1.8;
+        const bandHeight = radiusPx * (0.16 + (i % 2) * 0.04);
+        const bandWidth = radiusPx * 2.4;
+        const offset = Math.sin(body.angle * 0.8 + i * 1.7) * radiusPx * 0.14;
+        const band = ctx.createLinearGradient(-bandWidth * 0.5, y, bandWidth * 0.5, y);
+        band.addColorStop(0, hexToRgba(shadeColor(body.color, -48), 0));
+        band.addColorStop(0.2, hexToRgba(shadeColor(body.color, -28), 0.34));
+        band.addColorStop(0.5, hexToRgba(shadeColor(body.color, 8), 0.22));
+        band.addColorStop(0.8, hexToRgba(shadeColor(body.color, -34), 0.34));
+        band.addColorStop(1, hexToRgba(shadeColor(body.color, -48), 0));
+        ctx.fillStyle = band;
+        ctx.beginPath();
+        ctx.ellipse(offset, y, bandWidth * 0.5, bandHeight, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      for (let i = 0; i < spotCount; i++) {
+        const angle = i * 2.2 + body.radius * 0.03;
+        const dist = radiusPx * (0.18 + (i % 3) * 0.16);
+        const x = Math.cos(angle) * dist;
+        const y = Math.sin(angle * 1.4) * dist * 0.7;
+        const spotR = radiusPx * (0.12 - (i % 2) * 0.025);
+        ctx.fillStyle = hexToRgba(shadeColor(body.color, -42), 0.22);
+        ctx.beginPath();
+        ctx.arc(x, y, spotR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = hexToRgba(shadeColor(body.color, 18), 0.18);
+        ctx.lineWidth = Math.max(1, radiusPx * 0.02);
+        ctx.stroke();
+      }
+
+      const sheen = ctx.createLinearGradient(-radiusPx, -radiusPx * 0.35, radiusPx, radiusPx * 0.4);
+      sheen.addColorStop(0, 'rgba(255,255,255,0.24)');
+      sheen.addColorStop(0.45, 'rgba(255,255,255,0.05)');
+      sheen.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = sheen;
+      ctx.beginPath();
+      ctx.ellipse(-radiusPx * 0.12, -radiusPx * 0.14, radiusPx * 0.9, radiusPx * 0.58, -0.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawVelocityVector(body, screenPos, radiusPx) {
+      const scale = 16;
+      const vx = body.vel.x * scale;
+      const vy = -body.vel.y * scale;
+      if (Math.hypot(vx, vy) < 1e-4) return;
+
+      const endX = screenPos.x + vx;
+      const endY = screenPos.y + vy;
+      const angle = Math.atan2(endY - screenPos.y, endX - screenPos.x);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.78)';
+      ctx.fillStyle = 'rgba(255,255,255,0.78)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(screenPos.x, screenPos.y);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+
+      const head = Math.max(6, Math.min(12, radiusPx * 0.42));
+      ctx.beginPath();
+      ctx.moveTo(endX, endY);
+      ctx.lineTo(endX - head * Math.cos(angle - Math.PI / 6), endY - head * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(endX - head * Math.cos(angle + Math.PI / 6), endY - head * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function render() {
+      const rect = canvas.getBoundingClientRect();
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      drawBackground();
+      drawTrails();
+      drawBodies();
+      renderHud();
+    }
+
+    function loop(timestamp) {
+      if (!state.running) return;
+
+      if (state.lastTimestamp == null) state.lastTimestamp = timestamp;
+      const elapsed = Math.min(50, timestamp - state.lastTimestamp);
+      state.lastTimestamp = timestamp;
+
+      const stepMs = 1000 / 60;
+      const substeps = Math.max(1, Math.round(elapsed / stepMs));
+      stepSimulation(substeps);
+      render();
+      state.animationId = requestAnimationFrame(loop);
+    }
+
+    function hexToRgba(hex, alpha) {
+      const clean = hex.replace('#', '');
+      const bigint = parseInt(clean, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function shadeColor(hex, percent) {
+      const clean = hex.replace('#', '');
+      const num = parseInt(clean, 16);
+      const amt = Math.round(2.55 * percent);
+      const r = Math.min(255, Math.max(0, (num >> 16) + amt));
+      const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amt));
+      const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    document.getElementById('startBtn').addEventListener('click', startSimulation);
+    document.getElementById('pauseBtn').addEventListener('click', pauseSimulation);
+    document.getElementById('restartBtn').addEventListener('click', restartSimulation);
+    if (statsToggleBtn) {
+      statsToggleBtn.addEventListener('click', () => {
+        setStatsOpen(!appRoot.classList.contains('stats-open'));
+      });
+    }
+    if (controlsToggleBtn) {
+      controlsToggleBtn.addEventListener('click', () => {
+        setControlsOpen(!appRoot.classList.contains('controls-open'));
+      });
+    }
+    if (closeControlsBtn) {
+      closeControlsBtn.addEventListener('click', () => setControlsOpen(false));
+    }
+    if (panelBackdrop) {
+      panelBackdrop.addEventListener('click', () => setControlsOpen(false));
+    }
+    if (addBodyBtn) {
+      addBodyBtn.addEventListener('click', () => {
+        const configs = readBodyConfigs();
+        if (configs.length >= MAX_BODIES) return;
+        configs.push(getSuggestedNewBodyConfig());
+        renderBodyCards(configs);
+        syncPausedConfig();
+      });
+    }
+    if (bodyCardsContainer) {
+      bodyCardsContainer.addEventListener('input', syncPausedConfig);
+      bodyCardsContainer.addEventListener('click', event => {
+        const button = event.target.closest('.remove-body-btn');
+        if (!button) return;
+
+        const configs = readBodyConfigs();
+        const card = button.closest('.body-card');
+        const index = Number(card?.dataset.index);
+        if (!Number.isInteger(index) || configs.length <= 1) return;
+        configs.splice(index, 1);
+        renderBodyCards(configs);
+        syncPausedConfig();
+      });
+    }
+
+    [
+      'timeStep','gravConst','pixelsPerUnit','trailLength','autoFitPadding','zoomSmoothing',
+      'trackCentroid','autoResizeViewport'
+    ].forEach(id => {
+      const eventName = (id === 'trackCentroid' || id === 'autoResizeViewport') ? 'change' : 'input';
+      inputs[id].addEventListener(eventName, syncPausedConfig);
+    });
+
+    window.addEventListener('resize', () => applyLayoutMode(false));
+
+    renderBodyCards(defaultBodyConfigs.map(config => createBodyConfig(config)));
+    resetSimulation();
+    applyLayoutMode(true);
+  </script>
+</body>
+</html>
