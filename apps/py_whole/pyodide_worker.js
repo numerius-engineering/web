@@ -1428,6 +1428,12 @@ def _pywhole_patch_matplotlib():
         import matplotlib.pyplot as plt
         if getattr(plt, "_pywhole_patched", False):
             return
+        current_backend = str(matplotlib.get_backend() or "")
+        if current_backend.lower() != "agg":
+            matplotlib.use("Agg", force=True)
+            import matplotlib.pyplot as plt
+            plt.switch_backend("Agg")
+        matplotlib.rcParams["backend"] = "Agg"
         from matplotlib._pylab_helpers import Gcf
 
         def _pywhole_show(*args, **kwargs):
@@ -1452,20 +1458,6 @@ def _pywhole_patch_matplotlib():
             _pywhole_backend_bases.FigureManagerBase.show = (
                 lambda self, *args, **kwargs: _pywhole_capture_specific_figure(
                     getattr(getattr(self, "canvas", None), "figure", None),
-                )
-            )
-            _pywhole_backend_bases.FigureCanvasBase.show = (
-                lambda self, *args, **kwargs: _pywhole_capture_specific_figure(
-                    getattr(self, "figure", None),
-                )
-            )
-        except Exception:
-            pass
-        try:
-            import matplotlib.backends.backend_agg as _pywhole_backend_agg
-            _pywhole_backend_agg.FigureCanvasAgg.show = (
-                lambda self, *args, **kwargs: _pywhole_capture_specific_figure(
-                    getattr(self, "figure", None),
                 )
             )
         except Exception:
