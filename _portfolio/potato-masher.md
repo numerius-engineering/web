@@ -9,6 +9,7 @@ tags:
   - Fabrication
   - Prototyping
 featured: true
+category: design
 ---
 
 <section class="page-header">

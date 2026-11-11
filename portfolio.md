@@ -1,16 +1,19 @@
 ---
-title: Portfolio
-description: A project gallery for past work, prototypes, and build documentation.
+title: Software Portfolio
+description: Software projects and build documentation.
 ---
 
 <section class="page-header">
-  <p class="eyebrow">Portfolio</p>
+  <p class="eyebrow">Software Portfolio</p>
   <h1>Project gallery.</h1>
   <p class="lead">This gallery is driven by portfolio entries that can grow into image-heavy project case studies, build notes, and product snapshots over time.</p>
 </section>
 
 <section class="gallery-grid">
-  {% assign portfolio_items = site.portfolio | where_exp: "item", "item.in_apps != true" | sort: "title" %}
+  {% assign portfolio_items = site.portfolio | where_exp: "item", "item.in_apps != true and item.category != \"design\"" | sort: "title" %}
+  {% if portfolio_items.size == 0 %}
+    <p>Software projects are showcased in the <a href="{{ '/apps/' | relative_url }}">Web App Portfolio</a>. Additional entries will appear here.</p>
+  {% endif %}
   {% for project in portfolio_items %}
     <article class="gallery-item">
       {% if project.thumbnail %}

@@ -9,6 +9,7 @@ tags:
   - Mechanical design
   - Fabrication
 featured: true
+category: design
 ---
 
 <section class="page-header">

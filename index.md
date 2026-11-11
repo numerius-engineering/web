@@ -58,11 +58,15 @@ description: Consulting-led electronics design, product development, and softwar
       <span>Consulting, product development, prototyping, fabrication, and application work.</span>
     </a>
     <a class="info-card" href="{{ '/portfolio/' | relative_url }}">
-      <strong>Portfolio</strong>
-      <span>An image-first gallery of past project work and build notes.</span>
+      <strong>Software Portfolio</strong>
+      <span>An image-first gallery of software project work and build notes.</span>
+    </a>
+    <a class="info-card" href="{{ '/design-portfolio/' | relative_url }}">
+      <strong>Design Portfolio</strong>
+      <span>Physical designs and fabrication projects built by Numerius Engineering.</span>
     </a>
     <a class="info-card" href="{{ '/apps/' | relative_url }}">
-      <strong>Apps</strong>
+      <strong>Web App Portfolio</strong>
       <span>Access the portal to web applications developed by Numerius Engineering.</span>
     </a>
     <a class="info-card" href="{{ '/about/' | relative_url }}">

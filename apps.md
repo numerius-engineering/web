@@ -1,10 +1,10 @@
 ---
-title: Apps
+title: Web App Portfolio
 description: Gateway for browser-based applications and software tools developed by Numerius Engineering.
 ---
 
 <section class="page-header">
-  <p class="eyebrow">Apps</p>
+  <p class="eyebrow">Web App Portfolio</p>
   <h1>Application gateway.</h1>
   <p class="lead">This section provides access to browser-based applications and software tools developed by Numerius Engineering. Apps hosted here are designed to launch directly from the site.</p>
 </section>
