@@ -9,6 +9,7 @@ tags:
   - Software
   - Release support
 featured: true
+in_apps: true
 ---
 
 <section class="page-header">

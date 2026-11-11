@@ -9,6 +9,7 @@ tags:
   - WebAssembly
   - Productization
 featured: true
+in_apps: true
 ---
 
 <section class="page-header">

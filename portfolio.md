@@ -10,7 +10,7 @@ description: A project gallery for past work, prototypes, and build documentatio
 </section>
 
 <section class="gallery-grid">
-  {% assign portfolio_items = site.portfolio | sort: "title" %}
+  {% assign portfolio_items = site.portfolio | where_exp: "item", "item.in_apps != true" | sort: "title" %}
   {% for project in portfolio_items %}
     <article class="gallery-item">
       {% if project.thumbnail %}

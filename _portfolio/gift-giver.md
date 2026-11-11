@@ -8,6 +8,7 @@ tags:
   - Holiday utility
   - Single-file release
 featured: false
+in_apps: true
 ---
 
 <section class="page-header">

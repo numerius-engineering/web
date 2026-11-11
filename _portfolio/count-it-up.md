@@ -9,6 +9,7 @@ tags:
   - Data logging
   - Productization
 featured: true
+in_apps: true
 ---
 
 <section class="page-header">
