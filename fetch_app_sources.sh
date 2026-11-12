@@ -54,6 +54,7 @@ APP_TABLE=(
   "linear_lens_liner|Linear_Lens_Liner|0"
   "gravitated|Gravitated|0"
   "gift_giver|Gift_Giver|0"
+  "stratego|stratego|0"
 )
 
 log()  { printf '==> %s\n' "$*"; }
@@ -203,6 +204,17 @@ fetch_linear_lens_liner() {
 fetch_gift_giver() {
   local d; d="$(clone Gift_Giver)"
   install_file "${d}/gift_giver.html" gift_giver.html
+}
+
+fetch_stratego() {
+  # The single-file build is published as a release asset (public repo).
+  local d="${WORK_DIR}/stratego_release"
+  mkdir -p "${d}"
+  gh release download -R "${OWNER}/stratego" -p 'stratego-v*.html' -D "${d}" --clobber >&2
+  local out; out="$(ls "${d}"/stratego-v*.html 2>/dev/null | head -n1 || true)"
+  [[ -n "${out}" ]] || die "Stratego: release asset not found"
+  log "Stratego release asset: $(basename "${out}")"
+  install_file "${out}" stratego.html
 }
 
 fetch_gravitated() {
