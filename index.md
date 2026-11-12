@@ -65,10 +65,6 @@ description: Consulting-led electronics design, product development, and softwar
       <strong>Web App Portfolio</strong>
       <span>Access the portal to web applications developed by Numerius Engineering.</span>
     </a>
-    <a class="info-card" href="{{ '/publications/' | relative_url }}">
-      <strong>Publications</strong>
-      <span>Papers, articles, and technical write-ups.</span>
-    </a>
     <a class="info-card" href="{{ '/other-software/' | relative_url }}">
       <strong>Other Software</strong>
       <span>Desktop, mobile, and embedded software beyond the web apps.</span>
