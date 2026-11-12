@@ -1,10 +1,10 @@
 ---
-title: Apps
+title: Web App Portfolio
 description: Gateway for browser-based applications and software tools developed by Numerius Engineering.
 ---
 
 <section class="page-header">
-  <p class="eyebrow">Apps</p>
+  <p class="eyebrow">Web App Portfolio</p>
   <h1>Application gateway.</h1>
   <p class="lead">This section provides access to browser-based applications and software tools developed by Numerius Engineering. Apps hosted here are designed to launch directly from the site.</p>
 </section>
@@ -19,7 +19,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/gravitated.html' | relative_url }}">Gravitated</a></h2>
     <p>An N-body gravity simulator with up to 12 configurable bodies, inelastic merging, rotating surfaces, centroid tracking, and a mobile-friendly controls sheet. It also ships as an Android app wrapper.</p>
-    <p><a href="{{ '/portfolio/gravitated/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -31,7 +30,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/linear_lens_liner.html' | relative_url }}">Linear Lens Liner</a></h2>
     <p>A browser-based planar optical design tool with interactive source, lens, and sink layout, paraxial ray tracing, FreeCAD lens export, and a Fourier-optics beam propagation calculation.</p>
-    <p><a href="{{ '/portfolio/linear-lens-liner/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -43,7 +41,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/violet_mango.html' | relative_url }}">Violet Mango</a></h2>
     <p>A 2.5D finite-difference time-domain electromagnetic solver that runs entirely in the browser, with drawn or imported CAD geometry, PML boundaries, near-to-far-field patterns, and field visualization.</p>
-    <p><a href="{{ '/portfolio/violet-mango/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -55,7 +52,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/euclids_compass.html' | relative_url }}">Euclid's Compass</a></h2>
     <p>An interactive straightedge-and-compass construction canvas with collapsing and rigid compass modes, layers, length transport, equality checks, and touch support, packaged as a single-file HTML app.</p>
-    <p><a href="{{ '/portfolio/euclids-compass/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -67,7 +63,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/green_olive/gps-sim.html' | relative_url }}">Green Olive</a></h2>
     <p>A browser-based GPS sky and signal simulator that shows which satellites are overhead from live almanac data and generates L1 C/A, L2C, and L5 baseband IQ recordings carrying real navigation message content for receiver testing.</p>
-    <p><a href="{{ '/portfolio/green-olive/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -79,7 +74,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/gift_giver.html' | relative_url }}">Gift Giver</a></h2>
     <p>A festive Secret Santa gift-exchange generator that shuffles a list of names into a single random circle of giving, so everyone gives once and receives once, with one-click copy of the results.</p>
-    <p><a href="{{ '/portfolio/gift-giver/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -91,7 +85,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/py_whole/' | relative_url }}">Py-Whole</a></h2>
     <p>An offline browser notebook workbench with Pyodide-backed Python execution, project files, package loading, and a static web deployment package split across normal served files.</p>
-    <p><a href="{{ '/portfolio/py-whole/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -103,7 +96,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/rf_ranger.html' | relative_url }}">RF Ranger</a></h2>
     <p>A browser-based RF link analysis and reporting tool with map-driven workflows, persistent local workspaces, export features, and a portable single-file HTML build.</p>
-    <p><a href="{{ '/portfolio/rf-ranger/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -115,7 +107,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/inspector_blanque.html' | relative_url }}">Inspector Blanque</a></h2>
     <p>A browser-based chess position evaluator with local Stockfish analysis, PGN/FEN support, move-quality review, and a portable single-file HTML release.</p>
-    <p><a href="{{ '/portfolio/inspector-blanque/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -127,7 +118,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/count_it_up_single_file.html' | relative_url }}">Count It Up</a></h2>
     <p>A browser-based event counter and timestamped logbook with charting, local persistence, CSV import/export, and a portable single-file HTML build.</p>
-    <p><a href="{{ '/portfolio/count-it-up/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -139,7 +129,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/turbo_guacamole_single_file.html' | relative_url }}">Turbo Guacamole</a></h2>
     <p>A beach-themed browser Plinko simulator with adjustable rows, live particle motion, and histogram feedback packaged as a single-file HTML app.</p>
-    <p><a href="{{ '/portfolio/turbo-guacamole/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -151,7 +140,6 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/wordle_wizard.html' | relative_url }}">Wordle Wizard</a></h2>
     <p>A browser-based Wordle advisor with a portable single-file build and a responsive solver workflow for live gameplay support.</p>
-    <p><a href="{{ '/portfolio/wordle-wizard/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 
   <article class="gallery-item">
@@ -163,6 +151,5 @@ description: Gateway for browser-based applications and software tools developed
     </div>
     <h2><a href="{{ '/apps/post_fix_pro.html' | relative_url }}">Post Fix Pro</a></h2>
     <p>A polished calculator experience that can be launched directly in the browser from this app gateway.</p>
-    <p><a href="{{ '/portfolio/post-fix-pro/' | relative_url }}">View the project portfolio entry</a></p>
   </article>
 </section>

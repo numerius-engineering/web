@@ -1,10 +1,10 @@
 ---
-title: Portfolio
+title: Design Portfolio
 description: A project gallery for past work, prototypes, and build documentation.
 ---
 
 <section class="page-header">
-  <p class="eyebrow">Portfolio</p>
+  <p class="eyebrow">Design Portfolio</p>
   <h1>Project gallery.</h1>
   <p class="lead">This gallery is driven by portfolio entries that can grow into image-heavy project case studies, build notes, and product snapshots over time.</p>
 </section>

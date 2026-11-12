@@ -92,7 +92,7 @@ install_file() {
 
 # ---------------------------------------------------------------------------
 # Per-app fetchers. Destination file names are kept as they are today so the
-# links in apps.md and _portfolio/ keep working; only the contents change.
+# links in apps.md keep working; only the contents change.
 # ---------------------------------------------------------------------------
 
 fetch_post_fix_pro() {

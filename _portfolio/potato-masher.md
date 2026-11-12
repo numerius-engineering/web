@@ -12,7 +12,7 @@ featured: true
 ---
 
 <section class="page-header">
-  <p class="eyebrow">Portfolio</p>
+  <p class="eyebrow">Design Portfolio</p>
   <h1>Potato Masher</h1>
   <p class="lead">This project focused on designing and fabricating a replacement handle for a broken kitchen tool, using 3D printing to produce a fast functional solution around an existing metal component.</p>
 </section>

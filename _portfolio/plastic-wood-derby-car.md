@@ -12,7 +12,7 @@ featured: true
 ---
 
 <section class="page-header">
-  <p class="eyebrow">Portfolio</p>
+  <p class="eyebrow">Design Portfolio</p>
   <h1>Plastic-Wood Derby Car</h1>
   <p class="lead">This project reimagined the classic pinewood derby car through 3D printing, using additive fabrication to produce a race-ready design while staying close to the spirit of the original event.</p>
 </section>
